@@ -39,6 +39,7 @@ const collectionRoutes = new Set([
   "/inventory",
   "/invoices",
   "/notifications",
+  "/states",
 ]);
 
 const targetPath = collectionRoutes.has(requestPath)

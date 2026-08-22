@@ -392,8 +392,7 @@ export default function InvoicePrint({
                   </div>
                 )}
                 <div>
-                  State Name : {customer?.state || COMPANY.state}, Code :{" "}
-                  {customer?.state_code || COMPANY.stateCode}
+                     State ID : {customer?.state_id ?? "-"}
                 </div>
               </td>
             </tr>

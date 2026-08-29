@@ -49,7 +49,6 @@ export interface Invoice {
 }
 
 export interface CreateInvoiceDTO {
-  invoice_number: string;
   customer_id: number;
   invoice_date: string; // ISO date
   items: Array<{

@@ -130,7 +130,7 @@ export default function Sidebar({ isMobileOpen, onCloseMobile }: SidebarProps) {
           {/* Main Menu */}
           <div className="mb-8">
             <p
-              className={`mb-4 whitespace-nowrap px-8 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400 transition-opacity ${
+              className={`mb-4 whitespace-nowrap px-8 font-mono text-[12px] uppercase tracking-[0.2em]  text-slate-400 transition-opacity ${
                 isCollapsed ? "opacity-0" : "opacity-100"
               }`}
             >
@@ -155,15 +155,15 @@ export default function Sidebar({ isMobileOpen, onCloseMobile }: SidebarProps) {
                         className={`h-5 w-5 shrink-0 transition-colors ${
                           isActive
                             ? "text-indigo-600"
-                            : "text-slate-400 group-hover:text-slate-600"
+                            : "text-slate-500 group-hover:text-slate-600"
                         }`}
-                        fill={isActive ? "currentColor" : "none"}
+                        
                         strokeWidth={isActive ? 1.5 : 2}
                       />
                       {!isCollapsed && (
                         <span
                           className={`whitespace-nowrap text-sm ${
-                            isActive ? "font-bold" : "font-medium"
+                            isActive ? "font-bold" : "font-normal"
                           }`}
                         >
                           {item.label}
@@ -213,15 +213,15 @@ export default function Sidebar({ isMobileOpen, onCloseMobile }: SidebarProps) {
         <div className="hidden px-4 lg:block">
           <button
             onClick={() => setCollapsed((v) => !v)}
-            className="mb-2 flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+            className="mb-2 flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
           >
             <ChevronsLeft
-              className={`h-4 w-4 shrink-0 transition-transform ${
+              className={`h-5 w-5 shrink-0 transition-transform ${
                 collapsed ? "rotate-180" : ""
               }`}
             />
             {!isCollapsed && (
-              <span className="whitespace-nowrap text-xs font-medium">
+              <span className="whitespace-nowrap text-sm  font-mediu text-slate-500">
                 Collapse
               </span>
             )}

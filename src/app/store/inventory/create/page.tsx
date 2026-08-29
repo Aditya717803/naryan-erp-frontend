@@ -1,16 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import AddCustomer from "@/app/component/addcustomer";
+import AddProduct from "@/app/component/addproduct";
 
 export default function CreateCustomerPage() {
   const router = useRouter();
 
   return (
-    <AddCustomer
+    <AddProduct
       open={true}
       onClose={() => router.back()}
-      onSuccess={() => router.push("/store/customer")}
+      onSuccess={() => router.push("/store/inventory")}
     />
   );
 }

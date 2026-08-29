@@ -73,7 +73,15 @@ export default function BillingPage() {
 
   saveSelectedStore(selectedStore);
 
-  router.push("/store");
+  if (selectedStore === "store") {
+    router.push("/store");
+    return;
+  }
+
+  if (selectedStore === "plant") {
+    router.push("/manufacturer");
+    return;
+  }
 };
 
   if (!isMounted) {

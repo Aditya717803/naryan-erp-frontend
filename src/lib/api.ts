@@ -597,6 +597,26 @@ export async function createInvoice(
   return res.json();
 }
 
+export async function getNextInvoiceNumber(): Promise<{
+  invoice_number: string;
+}> {
+  const res = await apiFetch(
+    "/invoices/next-number",
+    {
+      method: "GET",
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
 /*
 |--------------------------------------------------------------------------
 | States
@@ -814,3 +834,27 @@ export async function getDashboard(): Promise<DashboardData> {
 
   return res.json();
 }
+
+
+
+
+// export async function getNextInvoiceNumber(): Promise<{
+//   invoice_number: string;
+// }> {
+//   const response = await fetch(
+//     `${API_BASE}/invoices/next-number`,
+//     {
+//       headers: {
+//         Authorization: `Bearer ${naryan_access_token}`,
+//       },
+//     }
+//   );
+
+//   if (!response.ok) {
+//     throw new Error(
+//       "Failed to fetch next invoice number"
+//     );
+//   }
+
+//   return response.json();
+// }

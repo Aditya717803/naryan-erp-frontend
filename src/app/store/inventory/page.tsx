@@ -335,7 +335,7 @@ export default function InventoryPage() {
               
             }}
             placeholder="Search Product Name..."
-            className="h-[52px] w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-lg text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-indigo-600 shadow-sm"
+            className="h-[52px] w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-indigo-600 shadow-sm"
           />
         </div>
             <button

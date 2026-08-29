@@ -188,7 +188,7 @@ export default function StoreDashboardPage() {
                 </h1>
 
                 <p className="mt-1.5 inline-block rounded-3xl border bg-violet-100 px-5 py-1 text-sm text-slate-500">
-                  Monitor Everything here!!
+                  View and monitor your ERP Dashboard
                 </p>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function StoreDashboardPage() {
               label: "Today's Sales",
               value: formatCurrency(summary.today_sales),
               icon: IndianRupee,
-              iconClass: "bg-indigo-50 text-indigo-600",
+              iconClass: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100/70 group-hover:text-emerald-700 group-hover-shadow-lg",
               badge: "Today",
               badgeClass: "text-emerald-600 bg-emerald-50",
               arrow: ArrowUpRight,
@@ -225,7 +225,7 @@ export default function StoreDashboardPage() {
               label: "Today's Invoices",
               value: summary.today_invoice_count.toLocaleString("en-IN"),
               icon: FileText,
-              iconClass: "bg-blue-50 text-blue-600",
+              iconClass: "bg-blue-50 text-blue-600 group-hover:bg-blue-100/70 group-hover:text-blue-700 group-hover-shadow-lg",
               badge: "Billing",
               badgeClass: "text-blue-600 bg-blue-50",
             },
@@ -233,7 +233,7 @@ export default function StoreDashboardPage() {
               label: "Total Customers",
               value: summary.total_customers.toLocaleString("en-IN"),
               icon: Users,
-              iconClass: "bg-violet-50 text-violet-600",
+              iconClass: "bg-violet-50 text-violet-600 group-hover:bg-violet-100/80 group-hover:text-violet-700 group-hover-shadow-lg",
               badge: "Customers",
               badgeClass: "text-violet-600 bg-violet-50",
             },
@@ -241,7 +241,7 @@ export default function StoreDashboardPage() {
               label: "Low Stock",
               value: summary.low_stock_count.toLocaleString("en-IN"),
               icon: AlertTriangle,
-              iconClass: "bg-amber-50 text-amber-600",
+              iconClass: "bg-amber-50 text-amber-600 group-hover:bg-amber-100/70 group-hover:text-amber-700 group-hover-shadow-lg",
               badge:
                 summary.low_stock_count > 0 ? "Attention" : "All clear",
               badgeClass:
@@ -257,7 +257,7 @@ export default function StoreDashboardPage() {
               <motion.div
                 key={card.label}
                 variants={cardVariants}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                className=" group rounded-xl border   border-slate-200 bg-white p-5 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg "
               >
                 <div className="flex items-start justify-between">
                   <div
@@ -274,8 +274,8 @@ export default function StoreDashboardPage() {
                   </span>
                 </div>
 
-                <p className="mt-5 text-sm text-slate-500">{card.label}</p>
-                <p className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+                <p className="mt-5 text-md group-hover:text-slate-800  text-slate-500">{card.label}</p>
+                <p className="mt-1 text-2xl font-bold tracking-tight text-slate-900/70">
                   {card.value}
                 </p>
               </motion.div>
@@ -309,12 +309,12 @@ export default function StoreDashboardPage() {
               {
                 label: "Add Customer",
                 icon: Users,
-                path: "/store/customers/create",
+                path: "/store/customer/create",
               },
               {
                 label: "Add Product",
                 icon: Package,
-                path: "/store/products/create",
+                path: "/store/inventory/create",
               },
               {
                 label: "Inventory",
@@ -328,15 +328,15 @@ export default function StoreDashboardPage() {
                 <button
                   key={action.label}
                   onClick={() => router.push(action.path)}
-                  className="group flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"
+                  className="group flex items-center gap-3 rounded-xl bg-slate-50 border-slate-200 p-3 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition group-hover:bg-indigo-100 group-hover:text-indigo-600">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-slate-600 transition group-hover:bg-indigo-100 group-hover:text-indigo-600">
                     <Icon className="h-4 w-4" />
                   </div>
                   <span className="text-xs font-semibold text-slate-700">
                     {action.label}
                   </span>
-                  <ArrowRight className="ml-auto h-3.5 w-3.5 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" />
+                  <ArrowRight className="ml-auto h-3.5 w-3.5 text-slate-600 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" />
                 </button>
               );
             })}

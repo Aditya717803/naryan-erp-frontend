@@ -23,6 +23,7 @@ import {
   createInvoice,
   getCustomers,
   getProducts,
+  getNextInvoiceNumber,
 } from "@/lib/api";
 
 import type { Customer } from "@/types/customer";
@@ -48,12 +49,17 @@ export default function CreateInvoicePage() {
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-
+  const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");   
   const [customerId, setCustomerId] = useState<number | "">("");
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [invoiceDate, setInvoiceDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
+  const [invoiceDate, setInvoiceDate] = useState(() => {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+});
 
   const [items, setItems] = useState<InvoiceRow[]>([
     { ...emptyRow },
@@ -78,6 +84,24 @@ export default function CreateInvoicePage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+  const loadInvoiceNumber = async () => {
+    try {
+      const data = await getNextInvoiceNumber();
+
+      setNextInvoiceNumber(data.invoice_number);
+    } catch (error) {
+      console.error(
+        "Failed to load invoice number:",
+        error,
+      );
+    }
+  };
+
+  loadInvoiceNumber();
+}, []);
+
 
   useEffect(() => {
     async function loadInitialData() {
@@ -207,11 +231,6 @@ export default function CreateInvoicePage() {
       return;
     }
 
-    if (!invoiceNumber.trim()) {
-      setError("Please enter an invoice number.");
-      return;
-    }
-
     if (items.length === 0) {
       setError("Add at least one invoice item.");
       return;
@@ -243,7 +262,6 @@ export default function CreateInvoicePage() {
     }
 
     const payload: CreateInvoiceDTO = {
-      invoice_number: invoiceNumber.trim(),
       customer_id: Number(customerId),
       invoice_date: invoiceDate,
 
@@ -397,17 +415,20 @@ export default function CreateInvoicePage() {
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div>
-                <label className="mb-2 block font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
-                  Invoice Number *
-                </label>
-                <input
-                  required
-                  value={invoiceNumber}
-                  onChange={(event) => setInvoiceNumber(event.target.value)}
-                  placeholder="INV-000001"
-                  className="h-[52px] w-full rounded-xl border border-slate-200 bg-white/80 px-4 text-sm text-slate-700 shadow-sm outline-none backdrop-blur-sm transition-all focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600"
-                />
-              </div>
+                  <label className="mb-2 block font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Invoice Number
+                  </label>
+
+                  <div className="flex h-[52px] w-full items-center rounded-xl border border-slate-200 bg-slate-50 px-4">
+                    <span className="font-mono text-sm font-semibold text-slate-700">
+                      {nextInvoiceNumber || "Loading..."}
+                    </span>
+                  </div>
+
+                  <p className="mt-2 text-xs text-slate-400">
+                    Automatically assigned when the invoice is created.
+                  </p>
+                </div>
 
               <div>
                 <label className="mb-2 block font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">

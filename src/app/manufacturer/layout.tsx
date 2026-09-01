@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/app/component/sidebar";
-import Navbar from "@/app/component/navbar";
+import Sidebar from "@/app/component/manufacture-sidebar";
+import Navbar from "@/app/component/manufacture-navbar";
 
 export default function StoreLayout({
   children,

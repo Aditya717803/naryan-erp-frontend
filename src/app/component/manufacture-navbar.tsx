@@ -35,11 +35,11 @@ interface NavbarProps {
 // ---------------------------------------------------------
 
 const PAGE_TITLES: Record<string, string> = {
-  "/store": "Store",
-  "/store/invoices": "Store Invoices",
-  "/store/inventory": "Store Inventory",
-  "/store/customer": "Store Customers Page",
-  "/store/settings": "Settings",
+  "/manufacturer/dashboard": "Manufacture Dashboard",
+  "/manufacturer/invoices": "Manufacture Invoices",
+  "/manufacturer/inventory": "Manufacture Inventory",
+  "/manufacturer/customer": "Manufacture Customers",
+  "/manufacturer/settings": "Settings",
 };
 
 // ---------------------------------------------------------
@@ -70,7 +70,7 @@ const SEARCH_ITEMS = [
       "customer",
       "client",
     ],
-    path: "/store/customer/create",
+    path: "/manufacturer/customer/create",
     category: "Quick Actions",
   },
 
@@ -84,7 +84,7 @@ const SEARCH_ITEMS = [
       "bill",
       "billing",
     ],
-    path: "/store/invoices/create",
+    path: "/manufacturer/invoices/create",
     category: "Quick Actions",
   },
 
@@ -98,7 +98,7 @@ const SEARCH_ITEMS = [
       "product",
       "item",
     ],
-    path: "/store/inventory/create",
+    path: "/manufacturer/inventory/create",
     category: "Quick Actions",
   },
 
@@ -114,7 +114,7 @@ const SEARCH_ITEMS = [
       "home",
       "main",
     ],
-    path: "/store",
+    path: "/manufacturer",
     category: "Pages",
   },
 
@@ -127,7 +127,7 @@ const SEARCH_ITEMS = [
       "bills",
       "billing",
     ],
-    path: "/store/invoices",
+    path: "/manufacturer/invoices",
     category: "Pages",
   },
 
@@ -139,7 +139,7 @@ const SEARCH_ITEMS = [
       "customer list",
       "clients",
     ],
-    path: "/store/customer",
+    path: "/manufacturer/customer",
     category: "Pages",
   },
 
@@ -152,7 +152,7 @@ const SEARCH_ITEMS = [
       "products",
       "items",
     ],
-    path: "/store/inventory",
+    path: "/manufacturer/inventory",
     category: "Pages",
   },
 
@@ -223,8 +223,15 @@ export default function Navbar({
   // Page title
   // ---------------------------------------------------------
 
-  const activeTitle =
-    PAGE_TITLES[pathname] || "Page";
+    const activeTitle =
+  PAGE_TITLES[pathname] ||
+  (pathname.startsWith("/manufacturer/invoices/")
+    ? "Manufacture Invoice"
+    : pathname.startsWith("/manufacturer/inventory/")
+      ? "Manufacture Inventory"
+      : pathname.startsWith("/manufacturer/customer/")
+        ? "Manufacture Customer"
+        : "Manufacture");
 
   // ---------------------------------------------------------
   // Search results

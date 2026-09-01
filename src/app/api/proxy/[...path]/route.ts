@@ -40,6 +40,10 @@ const collectionRoutes = new Set([
   "/invoices",
   "/notifications",
   "/states",
+  "/manufacture/customers",
+  "/manufacture/products",
+  "/manufacture/inventory",
+  "/manufacture/dashboard"
 ]);
 
 const targetPath = collectionRoutes.has(requestPath)

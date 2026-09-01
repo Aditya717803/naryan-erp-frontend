@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   BillingLocation,
   LoginCredentials,
   TokenResponse,
@@ -35,18 +35,18 @@ import type { Notification } from "@/types/notification";
 |
 | Browser:
 |   Browser
-|      ↓
+|      ?
 |   /api/proxy
-|      ↓
+|      ?
 |   HttpOnly JWT cookie
-|      ↓
+|      ?
 |   Railway FastAPI
 |
 | Server Component:
 |   Next.js Server
-|      ↓
+|      ?
 |   HttpOnly JWT cookie
-|      ↓
+|      ?
 |   Railway FastAPI
 |
 */
@@ -835,26 +835,369 @@ export async function getDashboard(): Promise<DashboardData> {
   return res.json();
 }
 
+//Manufractire Dashboard
+
+export async function getManufactureDashboard(): Promise<DashboardData> {
+  const res = await apiFetch(
+    "/manufacture/dashboard/",
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+// Manufracture Customer
+
+export async function getManufactureCustomers(
+  search?: string,
+): Promise<Customer[]> {
+  const q = search
+    ? `?search=${encodeURIComponent(search)}`
+    : "";
+
+  const res = await apiFetch(
+    `/manufacture/customers/${q}`,
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+export async function getManufactureCustomer(
+  customerId: number,
+): Promise<Customer> {
+  const res = await apiFetch(
+    `/manufacture/customers/${customerId}`,
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+export async function createManufactureCustomer(
+  data: CreateCustomerDTO
+): Promise<Customer> {
 
 
+  const response = await apiFetch(
+    "/manufacture/customers/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }
+  );
 
-// export async function getNextInvoiceNumber(): Promise<{
-//   invoice_number: string;
-// }> {
-//   const response = await fetch(
-//     `${API_BASE}/invoices/next-number`,
-//     {
-//       headers: {
-//         Authorization: `Bearer ${naryan_access_token}`,
-//       },
-//     }
-//   );
+  if (!response.ok) {
+    const text = await response.text();
 
-//   if (!response.ok) {
-//     throw new Error(
-//       "Failed to fetch next invoice number"
-//     );
-//   }
+    let message = "Failed to create customer";
 
-//   return response.json();
-// }
+    if (text) {
+      try {
+        const error = JSON.parse(text);
+        message = error.detail || message;
+      } catch {
+        message = text;
+      }
+    }
+
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+/*
+|--------------------------------------------------------------------------
+| Manufacture Products
+|--------------------------------------------------------------------------
+*/
+
+export async function getManufactureProducts(
+  search?: string,
+): Promise<Product[]> {
+  const q = search
+    ? `?search=${encodeURIComponent(search)}`
+    : "";
+
+  const res = await apiFetch(
+    `/manufacture/products/${q}`,
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+export async function getManufactureProduct(
+  productId: number,
+): Promise<Product> {
+  const res = await apiFetch(
+    `/manufacture/products/${productId}`,
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+export async function createManufactureProduct(
+  data: CreateProductDTO,
+): Promise<Product> {
+  const res = await apiFetch(
+    "/manufacture/products/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Manufacture Inventory
+|--------------------------------------------------------------------------
+*/
+
+export async function getManufactureInventory(): Promise<
+  Inventory[]
+> {
+  const res = await apiFetch(
+    "/manufacture/inventory/",
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+
+export async function getManufactureProductInventory(
+  productId: number,
+): Promise<Inventory> {
+  const res = await apiFetch(
+    `/manufacture/inventory/${productId}`,
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+
+export async function addManufactureStock(
+  productId: number,
+  data: InventoryAdjustment,
+): Promise<Inventory> {
+  const res = await apiFetch(
+    `/manufacture/inventory/${productId}/add`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+
+export async function removeManufactureStock(
+  productId: number,
+  data: InventoryAdjustment,
+): Promise<Inventory> {
+  const res = await apiFetch(
+    `/manufacture/inventory/${productId}/remove`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+
+export async function getManufactureInventoryTransactions(
+  productId: number,
+): Promise<InventoryTransaction[]> {
+  const res = await apiFetch(
+    `/manufacture/inventory/${productId}/transactions`,
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+/*
+|--------------------------------------------------------------------------
+| Manufacture Invoices
+|--------------------------------------------------------------------------
+*/
+
+export async function getManufactureInvoices(
+  search?: string,
+): Promise<Invoice[]> {
+  const q = search
+    ? `?search=${encodeURIComponent(search)}`
+    : "";
+
+  const res = await apiFetch(
+    `/manufacture/invoices/${q}`,
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+
+export async function getManufactureInvoice(
+  invoiceId: number,
+): Promise<Invoice> {
+  const res = await apiFetch(
+    `/manufacture/invoices/${invoiceId}`,
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+
+export async function createManufactureInvoice(
+  data: CreateInvoiceDTO,
+): Promise<Invoice> {
+  const res = await apiFetch(
+    "/manufacture/invoices/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+
+export async function getNextManufactureInvoiceNumber(): Promise<{
+  invoice_number: string;
+}> {
+  const res = await apiFetch(
+    "/manufacture/invoices/next-number",
+    {
+      method: "GET",
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}

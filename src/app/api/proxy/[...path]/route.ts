@@ -35,7 +35,6 @@ const requestPath = `/${path.join("/")}`;
 
 const collectionRoutes = new Set([
   "/customers",
-  "/customers/",
   "/products",
   "/inventory",
   "/invoices",

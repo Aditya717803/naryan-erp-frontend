@@ -127,7 +127,7 @@ export default function CustomersPage() {
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 className=" flex items-center  gap-2 text-3xl font-mono tracking-tight text-[#5500ff]">
-              <UserRoundSearch size= {36}/> Customers
+              <UserRoundSearch className="h-10 w-10 bg-indigo-100 p-1 rounded-4xl text-black" /> Customers
             </h1>
             <p className="mt-1.5 bg-violet-100 text-sm text-slate-500 border rounded-3xl px-5 py-1">
               Manage your client directory and view invoice histories.

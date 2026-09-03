@@ -213,9 +213,8 @@ export default async function CustomerPage({ params }: CustomerPageProps) {
                     className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-5 transition-colors hover:bg-slate-50/50 rounded-xl px-2 -mx-2"
                   >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                      <FileText size={20} fill="currentColor" className="opacity-20" />
-                      <FileText size={20} className="absolute" />
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                      <FileText size={20} />
                     </div>
 
                     <div>

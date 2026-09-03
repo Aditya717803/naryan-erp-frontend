@@ -183,7 +183,7 @@ export default function StoreDashboardPage() {
             <div className="flex items-center gap-4">
               <div>
                 <h1 className="flex items-center gap-2 text-3xl font-mono tracking-tight text-[#5500ff]">
-                  <LayoutDashboard size={36} />
+                  <LayoutDashboard className="h-12 w-12 bg-indigo-100 p-2 rounded-3xl text-black" />
                   Dashboard
                 </h1>
 

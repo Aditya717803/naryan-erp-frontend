@@ -360,9 +360,8 @@ export default function Sidebar({
         {/* ===================================================
             BRAND
         =================================================== */}
-
-        <div
-          className={`relative mx-4 mt-6 border border-slate-200 p-3 transition-all bg-indigo-50 ${
+<div
+          className={`relative mx-4 mt-6 border border-slate-200 p-3 transition-all bg-slate-100/70 ${
             isCollapsed
               ? "mx-2 px-2"
               : ""
@@ -393,14 +392,14 @@ export default function Sidebar({
           >
             {/* Logo */}
 
-            <div className="flex h-9 w-9 rounded-xl items-center justify-center  text-xs font-semibold tracking-tight text-white bg-indigo-950">
-              <Factory className="h-[18px] w-[18px] text-slate-100"/>
+            <div className="flex h-10 w-10 rounded-4xl items-center justify-center  text-xs font-semibold tracking-tight text-white bg-indigo-100 border border-black">
+              <Factory className="h-[25px] w-[25px] text-black"/>
             </div>
 
             {!isCollapsed && (
               <div className="ml-2 min-w-0 leading-tight">
-                <p className="truncate text-xl font-mono text-indigo-800">
-                  Narayan
+                <p className="truncate text-xl font-mono text-indigo-700 ">
+                  Naryan
                 </p>
 
                 <p className="truncate  text-[16px]  font-semibold   text-slate-500">

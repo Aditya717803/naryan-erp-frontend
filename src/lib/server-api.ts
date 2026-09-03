@@ -1,9 +1,8 @@
 import { cookies } from "next/headers";
 
-const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
-const API_BASE = "/api/proxy";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ??
+  "http://localhost:8000";
 
 export async function serverApiFetch(
   path: string,
@@ -11,21 +10,39 @@ export async function serverApiFetch(
 ): Promise<Response> {
   const cookieStore = await cookies();
 
-  const cookieHeader = cookieStore
-    .getAll()
-    .map(({ name, value }) => `${name}=${value}`)
-    .join("; ");
+  const token = cookieStore.get(
+    "naryan_access_token",
+  )?.value;
 
-  return fetch(`${APP_URL}${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      ...options.headers,
-      ...(cookieHeader
-        ? {
-            Cookie: cookieHeader,
-          }
-        : {}),
+  if (!token) {
+    return new Response(
+      JSON.stringify({
+        detail: "Not authenticated",
+      }),
+      {
+        status: 401,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  }
+
+  const headers = new Headers(
+    options.headers,
+  );
+
+  headers.set(
+    "Authorization",
+    `Bearer ${token}`,
+  );
+
+  return fetch(
+    `${API_BASE}${path}`,
+    {
+      ...options,
+      headers,
+      cache: "no-store",
     },
-    cache: "no-store",
-  });
+  );
 }

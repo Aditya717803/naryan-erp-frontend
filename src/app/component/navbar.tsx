@@ -577,8 +577,10 @@ export default function Navbar({
             Narayan Aluminium · {activeLocation}
           </span>
         </div>
+        
       </div>
-
+      
+      
       {/* =====================================================
           RIGHT
       ====================================================== */}

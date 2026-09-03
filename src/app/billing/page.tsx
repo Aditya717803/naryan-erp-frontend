@@ -24,18 +24,18 @@ import type { BillingLocation, StoreType, User } from "@/types/auth";
 const locations: BillingLocation[] = [
   {
     id: "store",
-    name: "Retail Store",
+    name: "Naryan Alushine (Store)",
     subtitle: "Front-desk counter billing",
-    address: "Andheri East, Mumbai, MH",
-    gstin: "27AABCS4567K1Z2",
+    address: "E 2-200 Sector A , Carpet City Bida , Bhadohi - 221401",
+    gstin: "09ADOPY6590N1Z7",
     features: ["Point-of-sale invoices", "Walk-in customer GSTIN", "Daily sales register"],
   },
   {
     id: "plant",
-    name: "Manufacturing Plant",
+    name: "Narayan Aluminium (Manufacturer)",
     subtitle: "Factory dispatch billing",
-    address: "Peenya Industrial Area, Bangalore, KA",
-    gstin: "29AABCT1234F1Z5",
+    address: "Bai Pass Road, Rewara Paraspur S.R. N. Bhadohi - 221401",
+    gstin: "09AOCPY4652E1ZO",
     features: ["E-way bill & vehicle details", "HSN-coded bulk items", "Dispatch destination notes"],
   },
 ];

@@ -426,7 +426,7 @@ export default function ManufactureDashboardPage() {
               {
                 label: "Add Product",
                 icon: Package,
-                path: "/manufacturer/product/create",
+                path: "/manufacturer/inventory/create",
               },
               {
                 label: "Inventory",

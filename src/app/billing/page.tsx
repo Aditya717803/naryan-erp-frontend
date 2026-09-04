@@ -24,7 +24,7 @@ import type { BillingLocation, StoreType, User } from "@/types/auth";
 const locations: BillingLocation[] = [
   {
     id: "store",
-    name: "Naryan Alushine (Store)",
+    name: "Narayan Alushine (Store)",
     subtitle: "Front-desk counter billing",
     address: "E 2-200 Sector A , Carpet City Bida , Bhadohi - 221401",
     gstin: "09ADOPY6590N1Z7",

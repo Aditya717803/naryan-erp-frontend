@@ -261,7 +261,7 @@ export default function ManufactureDashboardPage() {
 
             <button
               onClick={loadDashboard}
-              className="group inline-flex h-11 items-center justify-center gap-2 rounded-3xl bg-indigo-950 px-4 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-2xl"
+              className="group inline-flex h-11 items-center justify-center gap-2 rounded-3xl bg-slate-950 px-4 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-2xl hover:bg-slate-800"
             >
               Refresh
 

@@ -196,7 +196,7 @@ export default function StoreDashboardPage() {
             {/* Right: Refresh */}
             <button
               onClick={loadDashboard}
-              className="group inline-flex h-11 items-center justify-center gap-2 rounded-3xl bg-indigo-950 px-4 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 ease-out hover:scale-[1.02] hover:text-white hover:shadow-2xl"
+              className="group inline-flex h-11 items-center justify-center gap-2 rounded-3xl bg-slate-950 px-4 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 ease-out hover:scale-[1.02] hover:text-white hover:shadow-2xl hover:bg-slate-800"
             > Refresh
               <RefreshCw className="h-4 w-4 transition-transform duration-500 ease-in-out group-hover:rotate-180" />
             </button>

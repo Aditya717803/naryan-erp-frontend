@@ -399,7 +399,7 @@ export default function Sidebar({
             {!isCollapsed && (
               <div className="ml-2 min-w-0 leading-tight">
                 <p className="truncate text-xl font-mono text-indigo-700 ">
-                  Naryan
+                  Narayan
                 </p>
 
                 <p className="truncate  text-[16px]  font-semibold   text-slate-500">

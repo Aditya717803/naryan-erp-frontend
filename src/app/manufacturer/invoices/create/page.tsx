@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   Loader2,
   Plus,
+  Minus,
   Trash2,
   AlertCircle,
   X,
@@ -154,7 +155,9 @@ export default function CreateInvoicePage() {
                 ? value === ""
                   ? null
                   : Number(value)
-                : Number(value),
+                : value === ""
+                  ? ""
+                  : Number(value),
         };
       }),
     );
@@ -170,6 +173,23 @@ export default function CreateInvoicePage() {
         return {
           ...item,
           product_id: productId === "" ? "" : Number(productId),
+        };
+      }),
+    );
+  }
+
+  function stepQuantity(index: number, delta: number) {
+    setItems((current) =>
+      current.map((item, itemIndex) => {
+        if (itemIndex !== index) {
+          return item;
+        }
+
+        const nextValue = Number((Number(item.quantity || 0) + delta).toFixed(3));
+
+        return {
+          ...item,
+          quantity: nextValue < 0 ? 0 : nextValue,
         };
       }),
     );
@@ -242,12 +262,12 @@ export default function CreateInvoicePage() {
         return;
       }
 
-      if (item.quantity <= 0) {
+      if (Number(item.quantity) <= 0) {
         setError("Quantity must be greater than zero.");
         return;
       }
 
-      if (item.rate <= 0) {
+      if (Number(item.rate) <= 0) {
         setError("Rate must be greater than zero.");
         return;
       }
@@ -350,7 +370,7 @@ export default function CreateInvoicePage() {
                 New Draft
               </div>
               <h1 className="text-3xl font-light tracking-tight text-[#0f172a]">
-                Create <span className="font-bold text-indigo-600">Invoice</span>
+                Create <span className="font-bold text-slate-800">Invoice</span>
               </h1>
               <p className="mt-1.5 text-sm text-slate-500">
                 Draft a new billing record and link it to a customer.
@@ -506,7 +526,7 @@ export default function CreateInvoicePage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px]">
+              <table className="w-full min-w-[980px]">
                 <thead className="bg-slate-50/50">
                   <tr>
                     <th className="w-10 px-4 py-4" />
@@ -579,48 +599,84 @@ export default function CreateInvoicePage() {
                           {product?.hsn_sac || "-"}
                         </td>
 
+                        {/* Quantity: now has +/- stepper buttons and select-all-on-focus */}
                         <td className="px-4 py-4">
-                          <input
-                            type="number"
-                            min="0.001"
-                            step="0.001"
-                            value={item.quantity}
-                            onChange={(event) =>
-                              updateItem(index, "quantity", event.target.value)
-                            }
-                            className="h-[44px] w-24 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-all focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
-                          />
+                          <div className="flex h-[44px] w-[132px] items-center rounded-xl border border-slate-200 bg-white transition-all focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600">
+                            <button
+                              type="button"
+                              onClick={() => stepQuantity(index, -1)}
+                              className="flex h-full w-9 flex-shrink-0 items-center justify-center rounded-l-xl text-slate-400 transition-colors hover:bg-slate-50 hover:text-indigo-600 active:bg-slate-100"
+                              aria-label="Decrease quantity"
+                            >
+                              <Minus size={14} strokeWidth={2.5} />
+                            </button>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              inputMode="decimal"
+                              value={item.quantity}
+                              onFocus={(event) => event.target.select()}
+                              onChange={(event) =>
+                                updateItem(index, "quantity", event.target.value)
+                              }
+                              className="h-full w-full min-w-0 border-x border-slate-200 bg-transparent px-1 text-center text-sm font-semibold text-slate-700 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => stepQuantity(index, 1)}
+                              className="flex h-full w-9 flex-shrink-0 items-center justify-center rounded-r-xl text-slate-400 transition-colors hover:bg-slate-50 hover:text-indigo-600 active:bg-slate-100"
+                              aria-label="Increase quantity"
+                            >
+                              <Plus size={14} strokeWidth={2.5} />
+                            </button>
+                          </div>
                         </td>
 
                         <td className="px-4 py-4 text-sm font-medium text-slate-500">
                           {product?.unit || "-"}
                         </td>
 
+                        {/* Rate: wider, select-all-on-focus, spinner arrows removed */}
                         <td className="px-4 py-4">
-                          <input
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            value={item.rate}
-                            onChange={(event) =>
-                              updateItem(index, "rate", event.target.value)
-                            }
-                            className="h-[44px] w-28 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-all focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
-                          />
+                          <div className="relative w-32">
+                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                              ₹
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              inputMode="decimal"
+                              value={item.rate}
+                              onFocus={(event) => event.target.select()}
+                              onChange={(event) =>
+                                updateItem(index, "rate", event.target.value)
+                              }
+                              className="h-[44px] w-full rounded-xl border border-slate-200 bg-white py-2 pl-7 pr-3 text-sm font-semibold text-slate-700 outline-none transition-all [appearance:textfield] focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            />
+                          </div>
                         </td>
 
                         <td className="px-4 py-4">
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            value={item.gst_rate ?? ""}
-                            onChange={(event) =>
-                              updateItem(index, "gst_rate", event.target.value)
-                            }
-                            className="h-[44px] w-24 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition-all focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
-                          />
+                          <div className="relative w-24">
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              inputMode="decimal"
+                              value={item.gst_rate ?? ""}
+                              onFocus={(event) => event.target.select()}
+                              onChange={(event) =>
+                                updateItem(index, "gst_rate", event.target.value)
+                              }
+                              className="h-[44px] w-full rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-7 text-sm text-slate-700 outline-none transition-all [appearance:textfield] focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            />
+                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+                              %
+                            </span>
+                          </div>
                         </td>
 
                         <td className="px-6 py-4 text-right text-sm font-bold text-[#0f172a]">

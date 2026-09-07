@@ -521,7 +521,7 @@ export default function CreateInvoicePage() {
                 className="inline-flex h-[44px] items-center justify-center gap-2 rounded-xl bg-indigo-50 px-5 text-sm font-semibold text-indigo-600 transition-all hover:bg-indigo-100 active:scale-[0.97]"
               >
                 <Plus size={16} strokeWidth={2.5} />
-                Add Row
+                Add Item
               </button>
             </div>
 

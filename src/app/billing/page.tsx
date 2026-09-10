@@ -25,7 +25,7 @@ const locations: BillingLocation[] = [
   {
     id: "store",
     name: "Narayan Aluminium (Store)",
-    subtitle: "Factory dispatch billing",
+    subtitle: "Front-desk counter billing ",
     address: "Bai Pass Road, Rewara Paraspur S.R. N. Bhadohi - 221401",
     gstin: "09AOCPY4652E1ZO",
     features: ["E-way bill & vehicle details", "HSN-coded bulk items", "Dispatch destination notes"],
@@ -34,7 +34,7 @@ const locations: BillingLocation[] = [
   {
     id: "plant",
     name: "Narayan Alushine (Manufacture)",
-    subtitle: "Front-desk counter billing",
+    subtitle: "Factory dispatch billing",
     address: "E 2-200 Sector A , Carpet City Bida , Bhadohi - 221401",
     gstin: "09ADOPY6590N1Z7",
     features: ["Point-of-sale invoices", "Walk-in customer GSTIN", "Daily sales register"],

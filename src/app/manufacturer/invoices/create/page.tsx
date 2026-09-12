@@ -316,7 +316,7 @@ export default function CreateInvoicePage() {
 
       const invoice = await createManufactureInvoice(payload);
 
-      router.push(`/manufracturer/invoices/${invoice.id}`);
+      router.push(`/manufacturer/invoices/${invoice.id}`);
     } catch (err) {
       console.error(err);
 

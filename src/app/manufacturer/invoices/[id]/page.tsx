@@ -170,7 +170,7 @@ export default function InvoiceDetailsPage() {
               </div>
               <h1 className="flex items-center gap-2.5 text-3xl font-light tracking-tight text-[#0f172a]">
                 <FileText size={24} className="hidden text-indigo-600 print:hidden" />
-                <span className="font-bold text-indigo-600">
+                <span className="font-bold text-slate-800">
                   {invoice.invoice_number}
                 </span>
               </h1>

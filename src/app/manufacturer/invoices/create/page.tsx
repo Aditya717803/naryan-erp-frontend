@@ -262,6 +262,21 @@ export default function CreateInvoicePage() {
         return;
       }
 
+      const product = products.find(
+        (productItem) => productItem.id === item.product_id,
+      );
+
+      if (
+        product &&
+        product.unit.trim().toLowerCase() !== "kg" &&
+        !Number.isInteger(Number(item.quantity))
+      ) {
+        setError(
+          `Quantity for ${product.unit} must be a whole number.`,
+        );
+        return;
+      }
+
       if (Number(item.quantity) <= 0) {
         setError("Quantity must be greater than zero.");
         return;
@@ -613,8 +628,16 @@ export default function CreateInvoicePage() {
                             <input
                               type="number"
                               min="0"
-                              step="1"
-                              inputMode="decimal"
+                              step={
+                                product?.unit.trim().toLowerCase() === "kg"
+                                  ? "0.1"
+                                  : "1"
+                              }
+                              inputMode={
+                                product?.unit.trim().toLowerCase() === "kg"
+                                  ? "decimal"
+                                  : "numeric"
+                              }
                               value={item.quantity}
                               onFocus={(event) => event.target.select()}
                               onChange={(event) =>

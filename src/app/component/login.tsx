@@ -248,7 +248,7 @@ export default function LoginPage() {
           >
             Need an account?{" "}
             <a
-              href="#contact"
+              href="https://wa.me/8999901788?text=Naryam%20Aluminium%20Ticket"
               className="font-medium text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-indigo-600"
             >
               Contact Developer
@@ -261,8 +261,8 @@ export default function LoginPage() {
           variants={item}
           className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400"
         >
-          <span>© 2026 Deep Solutions</span>
-          <span>Encrypted · SOC-2</span>
+          <span>© 2026 DeepByte Solutions</span>
+          <span>Secured Businees Management</span>
         </motion.div>
       </motion.div>
     </div>

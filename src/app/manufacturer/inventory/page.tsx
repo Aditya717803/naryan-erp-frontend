@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Package,
@@ -15,6 +15,7 @@ import {
   History,
   ArrowUp,
   ArrowDown,
+  Filter,
 } from "lucide-react";
 
 import {
@@ -43,10 +44,17 @@ const initialForm: CreateProductDTO = {
   unit: "Piece",
 };
 
+type StockFilter = "all" | "in-stock" | "low-stock" | "out-of-stock";
+type SortFilter = "name-asc" | "name-desc" | "stock-asc" | "stock-desc";
+
 export default function InventoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [inventory, setInventory] = useState<Inventory[]>([]);
   const [search, setSearch] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [unitFilter, setUnitFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [sortFilter, setSortFilter] = useState<SortFilter>("name-asc");
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -115,6 +123,54 @@ export default function InventoryPage() {
     );
 
     return item?.quantity ?? 0;
+  }
+
+  const unitOptions = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          products.map((product) => {
+            const value = product.unit.trim().toLowerCase();
+            return [value, product.unit.trim()];
+          }),
+        ).entries(),
+      ).sort((first, second) => first[1].localeCompare(second[1])),
+    [products],
+  );
+
+  const filteredProducts = useMemo(() => {
+    const result = products.filter((product) => {
+      const unit = product.unit.trim().toLowerCase();
+      const stock = getProductStock(product.id);
+      const matchesUnit =
+        unitFilter === "all" || unit === unitFilter;
+      const matchesStock =
+        stockFilter === "all" ||
+        (stockFilter === "in-stock" && stock >= 10) ||
+        (stockFilter === "low-stock" && stock > 0 && stock < 10) ||
+        (stockFilter === "out-of-stock" && stock === 0);
+
+      return matchesUnit && matchesStock;
+    });
+
+    return result.sort((first, second) => {
+      if (sortFilter === "stock-asc") {
+        return getProductStock(first.id) - getProductStock(second.id);
+      }
+
+      if (sortFilter === "stock-desc") {
+        return getProductStock(second.id) - getProductStock(first.id);
+      }
+
+      const comparison = first.name.localeCompare(second.name);
+      return sortFilter === "name-desc" ? -comparison : comparison;
+    });
+  }, [products, inventory, unitFilter, stockFilter, sortFilter]);
+
+  function clearFilters() {
+    setUnitFilter("all");
+    setStockFilter("all");
+    setSortFilter("name-asc");
   }
 
   function updateField(
@@ -198,8 +254,15 @@ export default function InventoryPage() {
 
     const quantity = Number(stockQuantity);
 
-    if (!Number.isInteger(quantity) || quantity <= 0) {
-      setError("Quantity must be a positive whole number.");
+    const isKg =
+      stockModal.product.unit.trim().toLowerCase() === "kg";
+
+    if (quantity <= 0 || (!isKg && !Number.isInteger(quantity))) {
+      setError(
+        isKg
+          ? "Quantity must be greater than zero."
+          : `Quantity for ${stockModal.product.unit} must be a whole number.`,
+      );
       return;
     }
 
@@ -320,10 +383,11 @@ export default function InventoryPage() {
         {/* Search & Meta */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Search Form */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex w-full max-w-lg gap-3"
-          >
+          <div className="flex w-full flex-wrap items-start gap-3">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex w-full max-w-lg flex-1 gap-3"
+            >
           <div className="relative w-full max-w-md">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500" />
           <input
@@ -338,28 +402,91 @@ export default function InventoryPage() {
             className="h-[52px] w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-indigo-600 shadow-sm"
           />
         </div>
-            <button
+             <button
               type="submit"
-              className="flex h-[52px] items-center justify-center rounded-xl bg-indigo-50 px-6 text-sm font-semibold text-indigo-600 transition-colors hover:bg-indigo-100"
+              className="flex h-[50px] items-center justify-center gap-2 rounded-full drop-shadow-md bg-slate-100 px-6 text-sm font-semibold text-black transition-colors hover:drop-shadow-lg"
             >
-              Search
+              <Search size={20} className="text-slate-500 " />
+              <span className="font-medium">Search</span>
             </button>
-          </form>
+            </form>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((open) => !open)}
+              className="flex h-[52px] items-center justify-center gap-2 rounded-xl border  bg-slate-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 hover:drop-shadow-lg"
+            >
+              <Filter size={17} />
+              Filter
+            </button>
 
-          {/* Product count */}
-          <div className="flex h-[52px] items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-5 text-sm font-medium text-slate-600 shadow-sm backdrop-blur-sm">
-            <Package
-              size={18}
-              className="text-indigo-600"
-              fill="currentColor"
-            />
-            <span>
-              {products.length}{" "}
-              {products.length === 1
-                ? "Product"
-                : "Products"}
-            </span>
+            {/* Product count */}
+            <div className="flex h-[52px] items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-5 text-sm font-medium text-slate-600 shadow-sm backdrop-blur-sm">
+              <Package
+                size={18}
+                className="text-black"
+                
+              />
+              <span>
+                {filteredProducts.length}{" "}
+                {filteredProducts.length === 1
+                  ? "Product"
+                  : "Products"}
+              </span>
+            </div>
           </div>
+
+          {filtersOpen && (
+            <div className="mt-4 grid w-full grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
+              <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                Unit
+                <select
+                  value={unitFilter}
+                  onChange={(event) => setUnitFilter(event.target.value)}
+                  className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none focus:border-indigo-600"
+                >
+                  <option value="all">All</option>
+                  {unitOptions.map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                Stock Status
+                <select
+                  value={stockFilter}
+                  onChange={(event) => setStockFilter(event.target.value as StockFilter)}
+                  className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none focus:border-indigo-600"
+                >
+                  <option value="all">All</option>
+                  <option value="in-stock">In Stock</option>
+                  <option value="low-stock">Low Stock</option>
+                  <option value="out-of-stock">Out of Stock</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                Sort By
+                <select
+                  value={sortFilter}
+                  onChange={(event) => setSortFilter(event.target.value as SortFilter)}
+                  className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-slate-700 outline-none focus:border-indigo-600"
+                >
+                  <option value="name-asc">Product Name (A-Z)</option>
+                  <option value="name-desc">Product Name (Z-A)</option>
+                  <option value="stock-asc">Stock: Low to High</option>
+                  <option value="stock-desc">Stock: High to Low</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="h-10 justify-self-start rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-indigo-600 sm:col-span-3"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Products table */}
@@ -374,7 +501,7 @@ export default function InventoryPage() {
                 Loading inventory...
               </span>
             </div>
-          ) : products.length === 0 ? (
+          ) : filteredProducts.length === 0 ? (
             <div className="flex min-h-[350px] flex-col items-center justify-center p-8 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50">
                 <Package
@@ -416,7 +543,7 @@ export default function InventoryPage() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-100/60">
-                  {products.map((product) => {
+                  {filteredProducts.map((product) => {
                     const stock = getProductStock(product.id);
 
                     return (
@@ -763,7 +890,16 @@ export default function InventoryPage() {
                   required
                   type="number"
                   min="1"
-                  step="1"
+                  step={
+                    stockModal.product.unit.trim().toLowerCase() === "kg"
+                      ? "0.1"
+                      : "1"
+                  }
+                  inputMode={
+                    stockModal.product.unit.trim().toLowerCase() === "kg"
+                      ? "decimal"
+                      : "numeric"
+                  }
                   value={stockQuantity}
                   onChange={(event) =>
                     setStockQuantity(

@@ -1,12 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  CheckCircle2,
-  RefreshCw,
-  Wrench,
+  Eye,
+  EyeOff,
+  Lock,
+  User,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const container = {
   hidden: {},
@@ -33,179 +36,233 @@ const item = {
   },
 };
 
-export default function MaintenancePage() {
+export default function LoginPage() {
+  const router = useRouter();
+
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (
+  e: React.FormEvent<HTMLFormElement>,
+) => {
+  e.preventDefault();
+
+  if (!userId.trim() || !password) {
+    alert("Please enter User ID and Password.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      "/api/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId.trim(),
+          password,
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(
+        data.detail ??
+          "Invalid User ID or Password",
+      );
+      return;
+    }
+
+    router.replace("/billing");
+  } catch (error) {
+    console.error("Login error:", error);
+
+    alert(
+      "Unable to connect to the server.",
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center bg-slate-50 p-6 sm:p-12">
       {/* Background */}
-      <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:3rem_3rem]" />
+      
+      <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:3rem_3rem] " />
+      
+
 
       <motion.div
         variants={container}
         initial="hidden"
         animate="show"
-        className="relative z-10 w-full max-w-[600px] rounded-2xl bg-white px-8 py-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:border sm:border-slate-100 sm:px-12"
+        className="relative z-10 w-full max-w-[540px] rounded-2xl bg-white px-8 py-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:border sm:border-slate-100 sm:px-12"
       >
+           
+        
         {/* Branding */}
         <motion.div
           variants={item}
-          className="mb-8 flex flex-col items-center text-center"
+          className="mb-6 flex flex-col items-center text-center "
         >
-          <span className="text-xl font-medium uppercase tracking-[0.3em] text-indigo-700">
+          <span className="text-xl text-indigo-700 font-medium uppercase tracking-[0.3em]">
             NARAYAN
           </span>
-
-          <span className="font-mono text-xs tracking-[0.3em] text-slate-600">
-            Aluminium
+          <span className="text-xs text-slate-600 font-mono tracking-[0.3em]">
+            Aluminium  
           </span>
-        </motion.div>
-
-        {/* Maintenance Icon */}
-        <motion.div
-          variants={item}
-          className="mx-auto mb-7 flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-50"
-        >
-          <motion.div
-            animate={{ rotate: [0, 8, -8, 0] }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            <Wrench
-              className="h-9 w-9 text-indigo-600"
-              strokeWidth={1.8}
-            />
-          </motion.div>
         </motion.div>
 
         {/* Header */}
         <motion.div
           variants={item}
-          className="mb-8 text-center"
+          className="mb-10 text-center"
         >
-          <p className="mb-3 font-mono text-sm uppercase tracking-[0.25em] text-indigo-600">
-            System Maintenance
+          <p className="mb-3 font-mono text-xl uppercase tracking-[0.25em] text-slate-500">
+            Welcome back
           </p>
 
           <h1 className="text-3xl font-light tracking-tighter text-slate-900 sm:text-5xl">
-            We&apos;ll be{" "}
-            <span className="font-mono text-4xl text-indigo-600 sm:text-5xl">
-              Back Soon
+            Sign in to{" "}
+            <span className="font-mono text-5xl text-indigo-600">
+               Portal
             </span>
           </h1>
-
-          <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-slate-500 sm:text-base">
-            The NARAYAN Aluminium management portal is currently undergoing
-            scheduled maintenance and system improvements.
-          </p>
         </motion.div>
 
-        {/* Status */}
-        <motion.div
-          variants={item}
-          className="rounded-xl border border-slate-200 bg-slate-50 p-5"
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-6"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-60" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-indigo-600" />
-              </span>
-
-              <span className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-slate-700">
-                Maintenance in progress
-              </span>
-            </div>
-
-            <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
-              Updating
-            </span>
-          </div>
-
-          {/* Progress */}
-          <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-slate-200">
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: "100%" }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="h-full w-1/2 rounded-full bg-slate-800"
-            />
-          </div>
-
-          <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-slate-400">
-            Please check back shortly
-          </p>
-        </motion.div>
-
-        {/* Improvements */}
-        <motion.div
-          variants={item}
-          className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
-        >
-          <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4">
-            <CheckCircle2
-              className="h-5 w-5 flex-shrink-0 text-indigo-600"
-              strokeWidth={1.8}
-            />
-
-            <div>
-              <p className="text-xs font-semibold text-slate-700">
-                Undergoing Database Migration 
-              </p>
-
-              <p className="mt-1 text-[10px] text-slate-400">
-                Your information is secure
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4">
-            <Wrench
-              className="h-5 w-5 flex-shrink-0 text-indigo-600"
-              strokeWidth={1.8}
-            />
-
-            <div>
-              <p className="text-xs font-semibold text-slate-700">
-                System Upgrade
-              </p>
-
-              <p className="mt-1 text-[10px] text-slate-400">
-                Improving system performance
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Refresh */}
-        <motion.div
-          variants={item}
-          className="mt-7 flex justify-center"
-        >
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="group flex h-12 items-center justify-center rounded-xl bg-slate-900 px-6 text-xs font-bold uppercase tracking-[0.15em] text-white transition-all hover:bg-slate-800 hover:shadow-lg"
+          {/* User ID */}
+          <motion.div
+            variants={item}
+            className="flex flex-col gap-2"
           >
-            Check Again
+            <label
+              htmlFor="userId"
+              className="font-mono text-sm uppercase tracking-[0.2em] text-slate-500"
+            >
+              User ID
+            </label>
 
-            <RefreshCw className="ml-2 h-4 w-4 transition-transform duration-500 group-hover:rotate-180" />
-          </button>
-        </motion.div>
+            <div className="relative">
+              <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-700 " />
+
+              <input
+                id="userId"
+                type="text"
+                autoComplete="username"
+                placeholder="Enter your User ID"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                className="h-14 w-full rounded-xl border border-slate-200 bg-slate-100 pl-11 pr-4 font-mono text-lg text-slate-900 outline-none transition-all placeholder:text-slate-400  focus:bg-indigo-100"
+              />
+            </div>
+          </motion.div>
+
+          {/* Password */}
+          <motion.div
+            variants={item}
+            className="flex flex-col gap-2"
+          >
+            <label
+              htmlFor="password"
+              className="font-mono text-sm uppercase tracking-[0.2em] text-slate-500"
+            >
+              Password
+            </label>
+
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-600" />
+
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-14 w-full rounded-xl border border-slate-200 bg-slate-100 pl-11 pr-4 font-mono text-lg text-slate-900 outline-none transition-all placeholder:text-slate-400  focus:bg-indigo-100"
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowPassword((prev) => !prev)
+                }
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Remember */}
+          <motion.div
+            variants={item}
+            className="flex items-center justify-between"
+          >
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-indigo-600"
+              />
+              Remember me
+            </label>
+
+           
+          </motion.div>
+
+          {/* Login */}
+          <motion.div variants={item}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group flex h-14 w-full items-center justify-center rounded-xl bg-slate-900 text-sm font-bold uppercase tracking-[0.15em] text-white transition-all hover:bg-slate-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loading ? "Signing In..." : "Sign In"}
+
+              {!loading && (
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              )}
+            </button>
+          </motion.div>
+
+          <motion.p
+            variants={item}
+            className="text-center text-sm text-slate-500"
+          >
+            Need an account?{" "}
+            <a
+              href="https://wa.me/8999901788?text=Naryam%20Aluminium%20Ticket"
+              className="font-medium text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-indigo-600"
+            >
+              Contact Developer
+            </a>
+          </motion.p>
+        </form>
 
         {/* Footer */}
         <motion.div
           variants={item}
-          className="mt-10 flex items-center justify-between border-t border-slate-100 pt-6 font-mono text-[10px] uppercase tracking-[0.15em] text-slate-400"
+          className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400"
         >
           <span>© 2026 DeepByte Solutions</span>
-
-          <span>Secured Business Management</span>
+          <span>Secured Businees Management</span>
         </motion.div>
       </motion.div>
     </div>

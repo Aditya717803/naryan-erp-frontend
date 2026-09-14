@@ -613,7 +613,7 @@ export default function CreateInvoicePage() {
                             <input
                               type="number"
                               min="0"
-                              step="0.1"
+                              step="0.001"
                               inputMode="decimal"
                               value={item.quantity}
                               onFocus={(event) => event.target.select()}
@@ -646,7 +646,7 @@ export default function CreateInvoicePage() {
                             <input
                               type="number"
                               min="0"
-                              step="0.01"
+                              step="0.001"
                               inputMode="decimal"
                               value={item.rate}
                               onFocus={(event) => event.target.select()}

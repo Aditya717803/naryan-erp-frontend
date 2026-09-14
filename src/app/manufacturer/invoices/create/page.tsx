@@ -630,7 +630,7 @@ export default function CreateInvoicePage() {
                               min="0"
                               step={
                                 product?.unit.trim().toLowerCase() === "kg"
-                                  ? "0.1"
+                                  ? "0.001"
                                   : "1"
                               }
                               inputMode={

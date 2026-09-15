@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Naryan Aluminium",
+  title: "Narayan Aluminium",
   description: "Developed by Deep Solution",
 };
 

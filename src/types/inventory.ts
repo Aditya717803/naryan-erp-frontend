@@ -2,6 +2,7 @@ export interface Inventory {
   id: number;
   product_id: number;
   quantity: number;
+  bundle_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -9,6 +10,10 @@ export interface Inventory {
 export interface InventoryAdjustment {
   quantity: number;
   note?: string | null;
+}
+
+export interface BundleCountAdjustment {
+  count: number;
 }
 
 export interface InventoryTransaction {

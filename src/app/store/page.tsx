@@ -34,7 +34,12 @@ import {
   YAxis,
 } from "recharts";
 
-import { getDashboard, type DashboardData } from "@/lib/api";
+import {
+  getDashboard,
+  getTopProducts,
+  type DashboardData,
+  type DashboardPeriod,
+} from "@/lib/api";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 18 },
@@ -71,12 +76,20 @@ export default function StoreDashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [topPeriod, setTopPeriod] =
+    useState<DashboardPeriod>("week");
+  const [topProducts, setTopProducts] = useState<
+    DashboardData["top_products"]
+  >([]);
+  const [topProductsLoading, setTopProductsLoading] = useState(false);
 
   const loadDashboard = async () => {
     try {
       setLoading(true);
       setError("");
-      setDashboard(await getDashboard());
+      const data = await getDashboard();
+      setDashboard(data);
+      setTopProducts(data.top_products);
     } catch (err) {
       console.error("Dashboard error:", err);
       setError(
@@ -90,6 +103,31 @@ export default function StoreDashboardPage() {
   useEffect(() => {
     loadDashboard();
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    async function loadTopProducts() {
+      try {
+        setTopProductsLoading(true);
+        const data = await getTopProducts(topPeriod);
+        if (active) setTopProducts(data);
+      } catch (err) {
+        if (active) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load top products",
+          );
+        }
+      } finally {
+        if (active) setTopProductsLoading(false);
+      }
+    }
+    loadTopProducts();
+    return () => {
+      active = false;
+    };
+  }, [topPeriod]);
 
   const inventoryData = useMemo(() => {
     if (!dashboard) return [];
@@ -454,18 +492,37 @@ export default function StoreDashboardPage() {
                   Best-selling products by quantity.
                 </p>
               </div>
-              <ShoppingCart className="h-5 w-5 text-indigo-500" />
+              <div className="flex items-center gap-3">
+                <select
+                  value={topPeriod}
+                  onChange={(event) =>
+                    setTopPeriod(event.target.value as DashboardPeriod)
+                  }
+                  className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-600 outline-none focus:border-indigo-500"
+                  aria-label="Top products period"
+                >
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                  <option value="year">Year</option>
+                </select>
+                <ShoppingCart className="h-5 w-5 text-indigo-500" />
+              </div>
             </div>
 
             <div className="h-[300px]">
-              {dashboard.top_products.length === 0 ? (
+              {topProductsLoading ? (
+                <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                  Loading products...
+                </div>
+              ) : topProducts.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-sm text-slate-400">
                   No product sales available.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={dashboard.top_products}
+                    data={topProducts}
                     layout="vertical"
                     margin={{ top: 5, right: 10, left: 20, bottom: 5 }}
                   >
@@ -490,7 +547,10 @@ export default function StoreDashboardPage() {
                     />
                     <Tooltip
                       contentStyle={chartTooltipStyle}
-                      formatter={(value) => [value, "Units Sold"]}
+                      formatter={(value, _name, item) => [
+                        `${value} ${item.payload?.unit ?? ""}`.trim(),
+                        "Quantity Sold",
+                      ]}
                     />
                     <Bar
                       dataKey="quantity_sold"

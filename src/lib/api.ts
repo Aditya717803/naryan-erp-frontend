@@ -23,6 +23,7 @@ import type {
 import type {
   Inventory,
   InventoryAdjustment,
+  BundleCountAdjustment,
   InventoryTransaction,
 } from "@/types/inventory";
 
@@ -511,6 +512,56 @@ export async function removeStock(
   return res.json();
 }
 
+export async function addBundleCount(
+  productId: number,
+  data: BundleCountAdjustment,
+): Promise<Inventory> {
+  const res = await apiFetch(
+    `/inventory/${productId}/bundles/add`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+export async function removeBundleCount(
+  productId: number,
+  data: BundleCountAdjustment,
+): Promise<Inventory> {
+  const res = await apiFetch(
+    `/inventory/${productId}/bundles/remove`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
 export async function getInventoryTransactions(
   productId: number,
 ): Promise<InventoryTransaction[]> {
@@ -553,6 +604,21 @@ export async function getInvoices(
   }
 
   return res.json();
+}
+
+export async function downloadInvoices(
+  startDate: string,
+  endDate: string,
+): Promise<Blob> {
+  const query = new URLSearchParams({
+    start_date: startDate,
+    end_date: endDate,
+  });
+  const res = await apiFetch(`/invoices/download?${query.toString()}`);
+  if (!res.ok) {
+    throw new ApiError(await parseError(res), res.status);
+  }
+  return res.blob();
 }
 
 export async function getInvoice(
@@ -604,6 +670,32 @@ export async function getNextInvoiceNumber(): Promise<{
     "/invoices/next-number",
     {
       method: "GET",
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+export type InvoiceArchiveResponse = {
+  status: "SUCCESS";
+  archived_at: string;
+  invoice_count: number;
+  file_name: string;
+  google_drive_file_id: string;
+};
+
+export async function archiveInvoices(): Promise<InvoiceArchiveResponse> {
+  const res = await apiFetch(
+    "/archive/invoices",
+    {
+      method: "POST",
     },
   );
 
@@ -810,6 +902,7 @@ export interface DashboardTopProduct {
   product_code: string;
   name: string;
   quantity_sold: number;
+  unit?: string;
 }
 
 export interface DashboardData {
@@ -820,9 +913,14 @@ export interface DashboardData {
   top_products: DashboardTopProduct[];
 }
 
-export async function getDashboard(): Promise<DashboardData> {
+export type DashboardPeriod = "day" | "week" | "month" | "year";
+
+export async function getDashboard(
+  period?: DashboardPeriod,
+): Promise<DashboardData> {
+  const query = period ? `?period=${period}` : "";
   const res = await apiFetch(
-    "/dashboard/",
+    `/dashboard/${query}`,
   );
 
   if (!res.ok) {
@@ -835,11 +933,26 @@ export async function getDashboard(): Promise<DashboardData> {
   return res.json();
 }
 
+export async function getTopProducts(
+  period: DashboardPeriod,
+): Promise<DashboardTopProduct[]> {
+  const res = await apiFetch(
+    `/dashboard/top-products?period=${period}`,
+  );
+  if (!res.ok) {
+    throw new ApiError(await parseError(res), res.status);
+  }
+  return res.json();
+}
+
 //Manufractire Dashboard
 
-export async function getManufactureDashboard(): Promise<DashboardData> {
+export async function getManufactureDashboard(
+  period?: DashboardPeriod,
+): Promise<DashboardData> {
+  const query = period ? `?period=${period}` : "";
   const res = await apiFetch(
-    "/manufacture/dashboard/",
+    `/manufacture/dashboard/${query}`,
   );
 
   if (!res.ok) {
@@ -849,6 +962,18 @@ export async function getManufactureDashboard(): Promise<DashboardData> {
     );
   }
 
+  return res.json();
+}
+
+export async function getManufactureTopProducts(
+  period: DashboardPeriod,
+): Promise<DashboardTopProduct[]> {
+  const res = await apiFetch(
+    `/manufacture/dashboard/top-products?period=${period}`,
+  );
+  if (!res.ok) {
+    throw new ApiError(await parseError(res), res.status);
+  }
   return res.json();
 }
 // Manufracture Customer
@@ -1092,6 +1217,56 @@ export async function removeManufactureStock(
   return res.json();
 }
 
+export async function addManufactureBundleCount(
+  productId: number,
+  data: BundleCountAdjustment,
+): Promise<Inventory> {
+  const res = await apiFetch(
+    `/manufacture/inventory/${productId}/bundles/add`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
+export async function removeManufactureBundleCount(
+  productId: number,
+  data: BundleCountAdjustment,
+): Promise<Inventory> {
+  const res = await apiFetch(
+    `/manufacture/inventory/${productId}/bundles/remove`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    },
+  );
+
+  if (!res.ok) {
+    throw new ApiError(
+      await parseError(res),
+      res.status,
+    );
+  }
+
+  return res.json();
+}
+
 
 export async function getManufactureInventoryTransactions(
   productId: number,
@@ -1135,6 +1310,23 @@ export async function getManufactureInvoices(
   }
 
   return res.json();
+}
+
+export async function downloadManufactureInvoices(
+  startDate: string,
+  endDate: string,
+): Promise<Blob> {
+  const query = new URLSearchParams({
+    start_date: startDate,
+    end_date: endDate,
+  });
+  const res = await apiFetch(
+    `/manufacture/invoices/download?${query.toString()}`,
+  );
+  if (!res.ok) {
+    throw new ApiError(await parseError(res), res.status);
+  }
+  return res.blob();
 }
 
 

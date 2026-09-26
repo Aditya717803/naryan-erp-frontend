@@ -21,6 +21,7 @@ export interface Invoice {
   id: number;
   invoice_number: string;
   customer_id: number;
+  deduct_from_inventory: boolean;
   invoice_date: string;
   eway_bill_number?: string | null;
   delivery_note?: string | null;
@@ -51,6 +52,7 @@ export interface Invoice {
 export interface CreateInvoiceDTO {
   customer_id: number;
   invoice_date: string; // ISO date
+  deduct_from_inventory: boolean;
   items: Array<{
     product_id: number;
     description?: string;

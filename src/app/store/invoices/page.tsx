@@ -13,12 +13,16 @@ import {
   X,
   Files,
   Filter,
+  Archive,
+  Download,
 
 } from "lucide-react";
 
 import {
   getInvoices,
   getCustomers,
+  archiveInvoices,
+  downloadInvoices,
 } from "@/lib/api";
 
 import type { Invoice } from "@/types/invoice";
@@ -48,6 +52,67 @@ export default function InvoicesPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [archiveMessage, setArchiveMessage] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [downloadStart, setDownloadStart] = useState("");
+  const [downloadEnd, setDownloadEnd] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  async function handleDownload() {
+    if (!downloadStart || !downloadEnd) {
+      setDownloadError("Select both a start date and an end date.");
+      return;
+    }
+    if (downloadStart > downloadEnd) {
+      setDownloadError("Start date cannot be later than end date.");
+      return;
+    }
+    try {
+      setDownloading(true);
+      setDownloadError(null);
+      const blob = await downloadInvoices(downloadStart, downloadEnd);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `store-invoices-${downloadStart}-to-${downloadEnd}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setDownloadOpen(false);
+    } catch (err) {
+      setDownloadError(
+        err instanceof Error ? err.message : "Failed to download invoices.",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  async function handleArchive() {
+    try {
+      setArchiving(true);
+      setError(null);
+      setArchiveMessage(null);
+      const result = await archiveInvoices();
+      setArchiveMessage(
+        `Archive completed successfully. ${result.invoice_count} ${
+          result.invoice_count === 1 ? "invoice" : "invoices"
+        } archived to Google Drive.`,
+      );
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to archive invoices.",
+      );
+    } finally {
+      setArchiving(false);
+    }
+  }
 
   async function loadInvoices(searchTerm = "") {
     try {
@@ -144,7 +209,7 @@ export default function InvoicesPage() {
 
       <div className="relative z-10">
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className=" flex items-center  gap-2 text-3xl font-mono tracking-tight text-[#5500ff]">
               <Files className="h-10 w-10 bg-indigo-100 p-1 rounded-4xl text-black"/> Invoices
@@ -154,14 +219,64 @@ export default function InvoicesPage() {
             </p>
           </div>
 
-          <Link
+          <div className="flex flex-row gap-6">
+            <Link
             href="/store/invoices/create"
             className="flex h-[48px] items-center justify-center gap-2 rounded-xl bg-[#0f172a] px-6 text-sm font-bold uppercase tracking-[0.1em] text-white transition-all hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20 active:scale-[0.98]"
           >
             <Plus size={18} strokeWidth={2.5} />
             Create Invoice
           </Link>
+          
+          <button
+            type="button"
+            onClick={handleArchive}
+            disabled={archiving}
+            className="flex h-[48px] items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 text-sm font-bold uppercase tracking-[0.1em] text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {archiving ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Archive size={18} />
+            )}
+            {archiving ? "Archiving..." : "Archive Data"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDownloadError(null);
+              setDownloadOpen(true);
+            }}
+            className="flex h-[48px] items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 text-sm font-bold uppercase tracking-[0.1em] text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+          >
+            <Download size={18} />
+            Download Invoices
+          </button>
         </div>
+        </div>
+
+        {downloadOpen && (
+          <div className="mb-6 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-semibold text-slate-900">Download invoice ZIP</h2>
+              <button type="button" onClick={() => setDownloadOpen(false)} className="text-slate-400 hover:text-slate-700" aria-label="Close download form"><X size={18} /></button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">From
+                <input type="date" value={downloadStart} onChange={(e) => setDownloadStart(e.target.value)} className="mt-2 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-700" />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">To
+                <input type="date" value={downloadEnd} onChange={(e) => setDownloadEnd(e.target.value)} className="mt-2 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-700" />
+              </label>
+              <button type="button" onClick={handleDownload} disabled={downloading} className="flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
+                {downloading && <Loader2 size={16} className="animate-spin" />}
+                {downloading ? "Preparing..." : "Download ZIP"}
+              </button>
+            </div>
+            {downloadError && <p className="mt-3 text-sm font-medium text-red-600">{downloadError}</p>}
+          </div>
+        )}
+          
 
         {/* Error */}
         {error && (
@@ -177,6 +292,12 @@ export default function InvoicesPage() {
             >
               <X size={18} />
             </button>
+          </div>
+        )}
+
+        {archiveMessage && (
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/80 px-5 py-4 text-sm font-medium text-emerald-700">
+            {archiveMessage}
           </div>
         )}
 

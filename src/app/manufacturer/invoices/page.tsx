@@ -13,12 +13,14 @@ import {
   X,
   Files,
   Filter,
+  Download,
 
 } from "lucide-react";
 
 import {
   getManufactureInvoices,
   getManufactureCustomers,
+  downloadManufactureInvoices,
 } from "@/lib/api";
 
 import type { Invoice } from "@/types/invoice";
@@ -48,6 +50,42 @@ export default function InvoicesPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  const [downloadStart, setDownloadStart] = useState("");
+  const [downloadEnd, setDownloadEnd] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  async function handleDownload() {
+    if (!downloadStart || !downloadEnd) {
+      setDownloadError("Select both a start date and an end date.");
+      return;
+    }
+    if (downloadStart > downloadEnd) {
+      setDownloadError("Start date cannot be later than end date.");
+      return;
+    }
+    try {
+      setDownloading(true);
+      setDownloadError(null);
+      const blob = await downloadManufactureInvoices(downloadStart, downloadEnd);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `manufacture-invoices-${downloadStart}-to-${downloadEnd}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setDownloadOpen(false);
+    } catch (err) {
+      setDownloadError(
+        err instanceof Error ? err.message : "Failed to download invoices.",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   async function loadInvoices(searchTerm = "") {
     try {
@@ -161,7 +199,40 @@ export default function InvoicesPage() {
             <Plus size={18} strokeWidth={2.5} />
             Create Invoice
           </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setDownloadError(null);
+              setDownloadOpen(true);
+            }}
+            className="flex h-[48px] items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 text-sm font-bold uppercase tracking-[0.1em] text-slate-700 transition-all hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+          >
+            <Download size={18} />
+            Download Invoices
+          </button>
         </div>
+
+        {downloadOpen && (
+          <div className="mb-6 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-semibold text-slate-900">Download invoice ZIP</h2>
+              <button type="button" onClick={() => setDownloadOpen(false)} className="text-slate-400 hover:text-slate-700" aria-label="Close download form"><X size={18} /></button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">From
+                <input type="date" value={downloadStart} onChange={(e) => setDownloadStart(e.target.value)} className="mt-2 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-700" />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">To
+                <input type="date" value={downloadEnd} onChange={(e) => setDownloadEnd(e.target.value)} className="mt-2 h-10 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-700" />
+              </label>
+              <button type="button" onClick={handleDownload} disabled={downloading} className="flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
+                {downloading && <Loader2 size={16} className="animate-spin" />}
+                {downloading ? "Preparing..." : "Download ZIP"}
+              </button>
+            </div>
+            {downloadError && <p className="mt-3 text-sm font-medium text-red-600">{downloadError}</p>}
+          </div>
+        )}
 
         {/* Error */}
         {error && (

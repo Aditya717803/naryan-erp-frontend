@@ -52,6 +52,7 @@ export default function CreateInvoicePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState("");   
   const [customerId, setCustomerId] = useState<number | "">("");
+  const [deductFromInventory, setDeductFromInventory] = useState(false);
   const [invoiceDate, setInvoiceDate] = useState(() => {
   const today = new Date();
 
@@ -284,6 +285,7 @@ export default function CreateInvoicePage() {
     const payload: CreateInvoiceDTO = {
       customer_id: Number(customerId),
       invoice_date: invoiceDate,
+      deduct_from_inventory: deductFromInventory,
 
       items: items.map((item) => ({
         product_id: Number(item.product_id),
@@ -496,6 +498,15 @@ export default function CreateInvoicePage() {
                 )}
               </div>
             </div>
+                <label className="mt-2 flex items-center gap-3 text-sm font-medium text-slate-600 md:col-span-3">
+                  <input
+                    type="checkbox"
+                    checked={deductFromInventory}
+                    onChange={(event) => setDeductFromInventory(event.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-slate-800 focus:ring-slate-100"
+                  />
+                  Deduct quantities from inventory when this invoice is created
+                </label>
           </section>
 
           {/* Items */}

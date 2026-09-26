@@ -1,218 +1,270 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { motion, type Variants } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Lock,
+  User,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const container: Variants = {
+const container = {
   hidden: {},
   show: {
     transition: {
-      staggerChildren: 0.12,
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
     },
   },
 };
 
-const item: Variants = {
+const item = {
   hidden: {
-    opacity: 0,
     y: 20,
+    opacity: 0,
   },
   show: {
-    opacity: 1,
     y: 0,
+    opacity: 1,
     transition: {
       duration: 0.6,
-      ease: "easeOut",
+      ease: [0.16, 1, 0.3, 1] as const,
     },
   },
 };
 
-// 🔴 Change this to your expected maintenance end time
-const END_TIME = new Date("2026-09-22T13:00:00");
+export default function LoginPage() {
+  const router = useRouter();
 
-export default function Maintenance() {
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const difference = END_TIME.getTime() - new Date().getTime();
+  const handleSubmit = async (
+  e: React.FormEvent<HTMLFormElement>,
+) => {
+  e.preventDefault();
 
-      if (difference <= 0) {
-        setTimeLeft({
-          hours: 0,
-          minutes: 0,
-          seconds: 0,
-        });
-        return;
-      }
+  if (!userId.trim() || !password) {
+    alert("Please enter User ID and Password.");
+    return;
+  }
 
-      const hours = Math.floor(difference / (1000 * 60 * 60));
-      const minutes = Math.floor(
-        (difference % (1000 * 60 * 60)) / (1000 * 60)
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      "/api/auth/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userId.trim(),
+          password,
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(
+        data.detail ??
+          "Invalid User ID or Password",
       );
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      return;
+    }
 
-      setTimeLeft({
-        hours,
-        minutes,
-        seconds,
-      });
-    };
+    router.replace("/billing");
+  } catch (error) {
+    console.error("Login error:", error);
 
-    calculateTimeLeft();
-
-    const timer = setInterval(calculateTimeLeft, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (value: number) =>
-    value.toString().padStart(2, "0");
+    alert(
+      "Unable to connect to the server.",
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
-    <main className="min-h-screen bg-slate-50 flex items-center justify-center px-6 overflow-hidden">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-slate-50 p-6 sm:p-12">
+      {/* Background */}
+      
+      <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:3rem_3rem] " />
+      
+
+
       <motion.div
         variants={container}
         initial="hidden"
         animate="show"
-        className="w-full max-w-2xl text-center"
+        className="relative z-10 w-full max-w-[540px] rounded-2xl bg-white px-8 py-12 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:border sm:border-slate-100 sm:px-12"
       >
-        {/* Brand */}
+           
+        
+        {/* Branding */}
         <motion.div
           variants={item}
-          className="mb-6 flex flex-col items-center text-center"
+          className="mb-6 flex flex-col items-center text-center "
         >
-          <span className="lg:text-4xl sm:text-xl text-indigo-700 font-medium uppercase tracking-[0.3em]">
+          <span className="text-xl text-indigo-700 font-medium uppercase tracking-[0.3em]">
             NARAYAN
           </span>
-
-          <span className="lg:text-2xl sm:text-xl text-slate-600 font-mono tracking-[0.3em]">
-            Aluminium
+          <span className="text-xs text-slate-600 font-mono tracking-[0.3em]">
+            Aluminium  
           </span>
         </motion.div>
 
-        {/* Maintenance Illustration */}
+        {/* Header */}
         <motion.div
           variants={item}
-          className="relative mb-8 w-fit"
+          className="mb-10 text-center"
         >
-          <div className="text-[90px] sm:text-[130px] font-black leading-none tracking-tighter text-slate-200 select-none whitespace-pre-wrap">
-            Server Down⚠️
-          </div>
-        </motion.div>
+          <p className="mb-3 font-mono text-xl uppercase tracking-[0.25em] text-slate-500">
+            Welcome back
+          </p>
 
-        {/* Message */}
-        <motion.div variants={item}>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-            Updating Latest Changes including Backend.
+          <h1 className="text-3xl font-light tracking-tighter text-slate-900 sm:text-5xl">
+            Sign in to{" "}
+            <span className="font-mono text-5xl text-indigo-600">
+               Portal
+            </span>
           </h1>
-
-          <p className="mt-3 max-w-md mx-auto text-slate-500 leading-6">
-            The Narayan Aluminium system is currently undergoing scheduled
-            maintenance. We'll be back shortly.
-          </p>
         </motion.div>
 
-        {/* Countdown Timer */}
-        <motion.div variants={item} className="mt-8">
-          <p className="text-sm font-medium text-slate-500 mb-3">
-            Estimated time remaining
-          </p>
-
-          <div className="flex justify-center items-center gap-3">
-            {/* Hours */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm px-5 py-4 min-w-[80px]">
-              <div className="text-3xl sm:text-4xl font-bold text-slate-900 font-mono">
-                {formatTime(timeLeft.hours)}
-              </div>
-
-              <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">
-                Hours
-              </div>
-            </div>
-
-            <span className="text-2xl font-bold text-slate-400">
-              :
-            </span>
-
-            {/* Minutes */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm px-5 py-4 min-w-[80px]">
-              <div className="text-3xl sm:text-4xl font-bold text-slate-900 font-mono">
-                {formatTime(timeLeft.minutes)}
-              </div>
-
-              <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">
-                Minutes
-              </div>
-            </div>
-
-            <span className="text-2xl font-bold text-slate-400">
-              :
-            </span>
-
-            {/* Seconds */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm px-5 py-4 min-w-[80px]">
-              <div className="text-3xl sm:text-4xl font-bold text-indigo-700 font-mono">
-                {formatTime(timeLeft.seconds)}
-              </div>
-
-              <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">
-                Seconds
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Status */}
-        <motion.div
-          variants={item}
-          className="mt-6 flex items-center justify-center gap-2"
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-6"
         >
-          <span className="relative flex h-3 w-3">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75" />
-
-            <span className="relative inline-flex h-3 w-3 rounded-full bg-indigo-600" />
-          </span>
-
-          <span className="text-sm text-slate-500">
-            Maintenance in progress
-          </span>
-        </motion.div>
-
-        {/* Actions */}
-        <motion.div
-          variants={item}
-          className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
-        >
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-100 transition-all duration-200 shadow-sm"
+          {/* User ID */}
+          <motion.div
+            variants={item}
+            className="flex flex-col gap-2"
           >
-            ↻ Refresh Page
-          </button>
+            <label
+              htmlFor="userId"
+              className="font-mono text-sm uppercase tracking-[0.2em] text-slate-500"
+            >
+              User ID
+            </label>
 
-          <Link
-            href="/store"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 transition-all duration-200 shadow-lg shadow-slate-900/10"
+            <div className="relative">
+              <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-700 " />
+
+              <input
+                id="userId"
+                type="text"
+                autoComplete="username"
+                placeholder="Enter your User ID"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                className="h-14 w-full rounded-xl border border-slate-200 bg-slate-100 pl-11 pr-4 font-mono text-lg text-slate-900 outline-none transition-all placeholder:text-slate-400  focus:bg-indigo-100"
+              />
+            </div>
+          </motion.div>
+
+          {/* Password */}
+          <motion.div
+            variants={item}
+            className="flex flex-col gap-2"
           >
-            Back to Dashboard →
-          </Link>
-        </motion.div>
+            <label
+              htmlFor="password"
+              className="font-mono text-sm uppercase tracking-[0.2em] text-slate-500"
+            >
+              Password
+            </label>
+
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-indigo-600" />
+
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-14 w-full rounded-xl border border-slate-200 bg-slate-100 pl-11 pr-4 font-mono text-lg text-slate-900 outline-none transition-all placeholder:text-slate-400  focus:bg-indigo-100"
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setShowPassword((prev) => !prev)
+                }
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Remember */}
+          <motion.div
+            variants={item}
+            className="flex items-center justify-between"
+          >
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-indigo-600"
+              />
+              Remember me
+            </label>
+
+           
+          </motion.div>
+
+          {/* Login */}
+          <motion.div variants={item}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group flex h-14 w-full items-center justify-center rounded-xl bg-slate-900 text-sm font-bold uppercase tracking-[0.15em] text-white transition-all hover:bg-slate-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loading ? "Signing In..." : "Sign In"}
+
+              {!loading && (
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              )}
+            </button>
+          </motion.div>
+
+          <motion.p
+            variants={item}
+            className="text-center text-sm text-slate-500"
+          >
+            Need an account?{" "}
+            <a
+              href="https://wa.me/8999901788?text=Naryam%20Aluminium%20Ticket"
+              className="font-medium text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-indigo-600"
+            >
+              Contact Developer
+            </a>
+          </motion.p>
+        </form>
 
         {/* Footer */}
         <motion.div
           variants={item}
-          className="mt-12 text-xs text-slate-400"
+          className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-400"
         >
-          DeepByte Solutions • Business Management System
+          <span>© 2026 DeepByte Solutions</span>
+          <span>Secured Businees Management</span>
         </motion.div>
       </motion.div>
-    </main>
+    </div>
   );
 }
-

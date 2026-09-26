@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   BillingLocation,
   LoginCredentials,
   TokenResponse,
@@ -53,7 +53,7 @@ import type { Notification } from "@/types/notification";
 */
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ??
+  process.env.API_URL ??
   "http://localhost:8000";
 
 const PROXY_BASE = "/api/proxy";

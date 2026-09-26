@@ -28,6 +28,7 @@ import type {
 } from "@/types/inventory";
 
 import type { Notification } from "@/types/notification";
+import type { Expense, ExpenseInput } from "@/types/expense";
 
 /*
 |--------------------------------------------------------------------------
@@ -351,6 +352,63 @@ export async function getCustomerInvoices(
   }
 
   return res.json();
+}
+
+/*
+|--------------------------------------------------------------------------
+| Expenses
+|--------------------------------------------------------------------------
+*/
+
+export async function getExpenses(
+  limit = 5,
+  offset = 0,
+): Promise<Expense[]> {
+  const query = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const response = await apiFetch(`/expenses?${query.toString()}`);
+  if (!response.ok) {
+    throw new ApiError(await parseError(response), response.status);
+  }
+  return response.json();
+}
+
+export async function createExpense(data: ExpenseInput): Promise<Expense> {
+  const response = await apiFetch("/expenses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new ApiError(await parseError(response), response.status);
+  }
+  return response.json();
+}
+
+export async function updateExpense(
+  expenseId: number,
+  data: ExpenseInput,
+): Promise<Expense> {
+  const response = await apiFetch(`/expenses/${expenseId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new ApiError(await parseError(response), response.status);
+  }
+  return response.json();
+}
+
+export async function deleteExpense(expenseId: number): Promise<void> {
+  const response = await apiFetch(`/expenses/${expenseId}`, {
+    method: "DELETE",
+  });
+  if (response.status < 200 || response.status >= 300) {
+    throw new ApiError(await parseError(response), response.status);
+  }
 }
 
 /*

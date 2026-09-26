@@ -19,6 +19,7 @@ import {
   ChevronsLeft,
   Factory,
   User as UserIcon,
+  Wallet,
 } from "lucide-react";
 
 import { logout } from "@/lib/auth";
@@ -56,6 +57,12 @@ export const SIDEBAR_ITEMS = [
     label: "Customers",
     icon: Users,
     href: "/manufacturer/customer",
+  },
+  {
+    id: "expenses",
+    label: "Expenses",
+    icon: Wallet,
+    href: "/manufacturer/expenses",
   },
 ];
 

@@ -150,7 +150,11 @@ console.log("TARGET PATH:", targetPath);
   );
 
   const responseBody =
-    await response.arrayBuffer();
+    response.status === 204 ||
+    response.status === 205 ||
+    response.status === 304
+      ? null
+      : await response.arrayBuffer();
 
   return new NextResponse(
     responseBody,

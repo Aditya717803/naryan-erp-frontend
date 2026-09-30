@@ -82,6 +82,7 @@ export default async function ManufactureInvoicePrintPage({
     <InvoicePrint
       invoice={invoice}
       customer={customer}
+      isManufacture
     />
   );
 }

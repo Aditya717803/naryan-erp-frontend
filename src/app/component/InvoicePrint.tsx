@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react";
 import type { Invoice } from "@/types/invoice";
 import type { Customer } from "@/types/customer";
 import { Printer, ArrowLeft } from "lucide-react";
@@ -7,6 +8,7 @@ interface InvoicePrintProps {
   invoice: Invoice;
   customer: Customer | null;
   onBack?: () => void;
+  isManufacture?: boolean;
 }
 
 const COMPANY = {
@@ -18,6 +20,15 @@ const COMPANY = {
   state: "Uttar Pradesh",
   stateCode: "09",
   email: "narayanalu.123@gmail.com",
+};
+
+const MANUFACTURE_COMPANY = {
+  ...COMPANY,
+  name: "M/s. Narayan Alushine",
+  address: "E 2-200 Sector A",
+  city: "Carpet City Bida\nBhadohi - 221401",
+  phone: "7081247777",
+  gstin: "09ADOPY6590N1Z7",
 };
 
 /* ----------------------------------------
@@ -169,7 +180,12 @@ export default function InvoicePrint({
   invoice,
   customer,
   onBack,
+  isManufacture = false,
 }: InvoicePrintProps) {
+  const [documentType, setDocumentType] = useState<
+    "tax_invoice" | "delivery_challan"
+  >("tax_invoice");
+  const company = isManufacture ? MANUFACTURE_COMPANY : COMPANY;
   const items = invoice.items ?? [];
 
   const totalTax =
@@ -196,6 +212,38 @@ export default function InvoicePrint({
           </button>
         ) : (
           <div />
+        )}
+        {isManufacture && (
+          <fieldset className="flex items-center gap-2">
+            <legend className="sr-only">Document Type</legend>
+            <span className="text-sm font-medium text-slate-600">
+              Document Type
+            </span>
+            <button
+              type="button"
+              aria-pressed={documentType === "tax_invoice"}
+              onClick={() => setDocumentType("tax_invoice")}
+              className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                documentType === "tax_invoice"
+                  ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                  : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Tax Invoice
+            </button>
+            <button
+              type="button"
+              aria-pressed={documentType === "delivery_challan"}
+              onClick={() => setDocumentType("delivery_challan")}
+              className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                documentType === "delivery_challan"
+                  ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                  : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Delivery Challan
+            </button>
+          </fieldset>
         )}
         <button
           onClick={handlePrint}
@@ -227,7 +275,9 @@ export default function InvoicePrint({
         {/* Title */}
         <div className="relative mb-1 text-center">
           <h1 className="text-[15px] font-bold uppercase tracking-wide">
-            Tax Invoice
+            {documentType === "delivery_challan"
+              ? "Delivery Challan"
+              : "Tax Invoice"}
           </h1>
           <span className="absolute right-0 top-0 text-[9px] italic text-slate-600">
             (ORIGINAL FOR RECIPIENT)
@@ -243,16 +293,18 @@ export default function InvoicePrint({
             <tr>
               <td rowSpan={8} className={`${CELL} w-[50%]`}>
                 <div className="text-[12px] font-bold text-slate-900">
-                  {COMPANY.name}
+                  {company.name}
                 </div>
-                <div className="mt-0.5">{COMPANY.address}</div>
-                <div>{COMPANY.city}</div>
-                <div>Mo :- {COMPANY.phone}</div>
-                <div>GSTIN/UIN: {COMPANY.gstin}</div>
+                <div className="mt-0.5">{company.address}</div>
+                <div className={isManufacture ? "whitespace-pre-line" : undefined}>
+                  {company.city}
+                </div>
+                <div>{isManufacture ? "MO" : "Mo"} :- {company.phone}</div>
+                <div>GSTIN/UIN: {company.gstin}</div>
                 <div>
-                  State Name : {COMPANY.state}, Code : {COMPANY.stateCode}
+                  State Name : {company.state}, Code : {company.stateCode}
                 </div>
-                <div>E-Mail : {COMPANY.email}</div>
+                <div>E-Mail : {company.email}</div>
               </td>
 
               <td className={`${CELL} w-[25%]`}>
@@ -610,7 +662,7 @@ export default function InvoicePrint({
           </div>
 
           <div className="relative p-1.5 text-right text-[9px]">
-            <strong>for {COMPANY.name}</strong>
+            <strong>for {company.name}</strong>
             <div className="absolute bottom-1 right-1 text-[9px] font-medium">
               Authorised Signatory
             </div>

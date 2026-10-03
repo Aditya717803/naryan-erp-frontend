@@ -12,3 +12,9 @@ export interface CreateProductDTO {
   hsn_sac?: string | null;
   unit: string;
 }
+
+export interface UpdateProductDTO {
+  name: string;
+  hsn_sac?: string | null;
+  unit: string;
+}

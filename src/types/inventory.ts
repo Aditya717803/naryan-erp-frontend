@@ -14,6 +14,7 @@ export interface InventoryAdjustment {
 
 export interface BundleCountAdjustment {
   count: number;
+  note?: string | null;
 }
 
 export interface InventoryTransaction {

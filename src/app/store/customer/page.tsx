@@ -13,11 +13,11 @@ import {
   Phone,
   FileText,
   ChevronRight,
-  UserRoundSearch
-  
+  UserRoundSearch,
+  Pencil,
 } from "lucide-react";
 
-import { getCustomers, createCustomer, getStates } from "@/lib/api";
+import { getCustomers, createCustomer, updateCustomer, getStates } from "@/lib/api";
 import type { Customer as CustomerType } from "@/types/customer";
 import type { State as ApiState } from "@/lib/api";
 
@@ -43,6 +43,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
 
   const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<CustomerType | null>(null);
   const [form, setForm] = useState<CustomerForm>(initialForm);
 
   const [states, setStates] = useState<ApiState[]>([]);
@@ -50,6 +51,7 @@ export default function CustomersPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   async function fetchCustomers(searchTerm = "") {
     try {
@@ -90,27 +92,53 @@ export default function CustomersPage() {
       setSubmitting(true);
       setError(null);
 
-      await createCustomer({
+      const data = {
         name: form.name.trim(),
         gstin_uin: form.gstin_uin.trim() || null,
         contact_person: form.contact_person.trim() || null,
         address: form.address.trim(),
         state_id: Number(form.state_id),
-      });
+      };
+      if (editingCustomer) {
+        const updated = await updateCustomer(editingCustomer.id, data);
+        setCustomers((current) =>
+          current.map((customer) =>
+            customer.id === updated.id ? updated : customer,
+          ),
+        );
+        setSuccess("Customer updated successfully.");
+      } else {
+        await createCustomer(data);
+        await fetchCustomers(search);
+        setSuccess("Customer created successfully.");
+      }
 
       // Reset form
       setForm(initialForm);
 
       // Close modal
       setShowAddCustomer(false);
-
-      // Reload customers
-      await fetchCustomers(search);
+      setEditingCustomer(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create customer");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function openEditCustomer(customer: CustomerType) {
+    setError(null);
+    setSuccess(null);
+    setEditingCustomer(customer);
+    setForm({
+      name: customer.name,
+      gstin_uin: customer.gstin_uin ?? "",
+      contact_person: customer.contact_person ?? "",
+      address: customer.address ?? "",
+      state_id: String(customer.state_id ?? ""),
+    });
+    setShowAddCustomer(true);
+    if (states.length === 0) loadStates();
   }
 
   function updateField(field: keyof CustomerForm, value: string) {
@@ -139,6 +167,8 @@ export default function CustomersPage() {
           type="button"
           onClick={() => {
             setError(null);
+            setSuccess(null);
+            setEditingCustomer(null);
             setForm(initialForm);
             setShowAddCustomer(true);
             if (states.length === 0) loadStates();
@@ -157,6 +187,11 @@ export default function CustomersPage() {
           <button type="button" onClick={() => setError(null)} className="text-red-500 hover:text-red-700 transition-colors">
             <X size={18} />
           </button>
+        </div>
+      )}
+      {success && (
+        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
+          {success}
         </div>
       )}
 
@@ -250,13 +285,23 @@ export default function CustomersPage() {
                 </div>
 
                 {/* Action */}
-                <Link 
-                  href={`/store/customer/${customer.id}`} 
-                  className="mt-2 flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 border border-slate-200 transition-all hover:bg-slate-50 hover:text-indigo-600 sm:mt-0"
-                >
-                  View Profile
-                  <ChevronRight size={16} />
-                </Link>
+                <div className="mt-2 flex shrink-0 gap-2 sm:mt-0">
+                  <button
+                    type="button"
+                    onClick={() => openEditCustomer(customer)}
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-600 transition-all hover:bg-indigo-100"
+                  >
+                    <Pencil size={15} />
+                    Edit
+                  </button>
+                  <Link 
+                    href={`/store/customer/${customer.id}`} 
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-indigo-600"
+                  >
+                    View Profile
+                    <ChevronRight size={16} />
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -271,14 +316,22 @@ export default function CustomersPage() {
             {/* Modal header */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-8 py-6">
               <div>
-                <h2 className="text-xl font-semibold text-[#0f172a]">Add Customer</h2>
+                <h2 className="text-xl font-semibold text-[#0f172a]">
+                  {editingCustomer ? "Edit Customer" : "Add Customer"}
+                </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Enter the required information to create a new profile.
+                  {editingCustomer
+                    ? "Update customer information."
+                    : "Enter the required information to create a new profile."}
                 </p>
               </div>
               <button 
                 type="button" 
-                onClick={() => setShowAddCustomer(false)} 
+                onClick={() => {
+                  setShowAddCustomer(false);
+                  setEditingCustomer(null);
+                }}
+                disabled={submitting}
                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
               >
                 <X size={20} />
@@ -287,6 +340,11 @@ export default function CustomersPage() {
 
             {/* Form */}
             <form onSubmit={handleCreateCustomer} className="p-8">
+              {error && (
+                <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 
                 {/* Name */}
@@ -375,7 +433,11 @@ export default function CustomersPage() {
               <div className="mt-8 flex flex-col-reverse justify-end gap-3 border-t border-slate-100 pt-6 sm:flex-row">
                 <button 
                   type="button" 
-                  onClick={() => setShowAddCustomer(false)} 
+                  onClick={() => {
+                    setShowAddCustomer(false);
+                    setEditingCustomer(null);
+                  }}
+                  disabled={submitting}
                   className="flex h-[48px] items-center justify-center rounded-xl bg-slate-50 px-6 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
                 >
                   Cancel
@@ -389,12 +451,16 @@ export default function CustomersPage() {
                   {submitting ? (
                     <>
                       <Loader2 size={18} className="animate-spin" />
-                      Creating...
+                      {editingCustomer ? "Saving..." : "Creating..."}
                     </>
                   ) : (
                     <>
-                      <UserPlus size={18} strokeWidth={2.5} />
-                      Create Customer
+                      {editingCustomer ? (
+                        <Pencil size={18} />
+                      ) : (
+                        <UserPlus size={18} strokeWidth={2.5} />
+                      )}
+                      {editingCustomer ? "Save Changes" : "Create Customer"}
                     </>
                   )}
                 </button>

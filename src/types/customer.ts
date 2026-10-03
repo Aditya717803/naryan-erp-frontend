@@ -15,3 +15,11 @@ export interface CreateCustomerDTO {
   address?: string;
   state_id: number;
 }
+
+export interface UpdateCustomerDTO {
+  name: string;
+  gstin_uin?: string | null;
+  contact_person?: string | null;
+  address: string;
+  state_id: number;
+}

@@ -8,11 +8,13 @@
 import type {
   Customer,
   CreateCustomerDTO,
+  UpdateCustomerDTO,
 } from "@/types/customer";
 
 import type {
   Product,
   CreateProductDTO,
+  UpdateProductDTO,
 } from "@/types/product";
 
 import type {
@@ -337,6 +339,21 @@ export async function createCustomer(
   return res.json();
 }
 
+export async function updateCustomer(
+  customerId: number,
+  data: UpdateCustomerDTO,
+): Promise<Customer> {
+  const res = await apiFetch(`/customers/${customerId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new ApiError(await parseError(res), res.status);
+  }
+  return res.json();
+}
+
 export async function getCustomerInvoices(
   customerId: number,
 ): Promise<Invoice[]> {
@@ -477,6 +494,21 @@ export async function createProduct(
     );
   }
 
+  return res.json();
+}
+
+export async function updateProduct(
+  productId: number,
+  data: UpdateProductDTO,
+): Promise<Product> {
+  const res = await apiFetch(`/products/${productId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new ApiError(await parseError(res), res.status);
+  }
   return res.json();
 }
 
@@ -1110,6 +1142,24 @@ export async function createManufactureCustomer(
   return response.json();
 }
 
+export async function updateManufactureCustomer(
+  customerId: number,
+  data: UpdateCustomerDTO,
+): Promise<Customer> {
+  const response = await apiFetch(
+    `/manufacture/customers/${customerId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    },
+  );
+  if (!response.ok) {
+    throw new ApiError(await parseError(response), response.status);
+  }
+  return response.json();
+}
+
 /*
 |--------------------------------------------------------------------------
 | Manufacture Products
@@ -1176,6 +1226,24 @@ export async function createManufactureProduct(
     );
   }
 
+  return res.json();
+}
+
+export async function updateManufactureProduct(
+  productId: number,
+  data: UpdateProductDTO,
+): Promise<Product> {
+  const res = await apiFetch(
+    `/manufacture/products/${productId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    },
+  );
+  if (!res.ok) {
+    throw new ApiError(await parseError(res), res.status);
+  }
   return res.json();
 }
 

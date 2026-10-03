@@ -16,11 +16,13 @@ import {
   ArrowUp,
   ArrowDown,
   Filter,
+  Pencil,
 } from "lucide-react";
 
 import {
   getManufactureProducts,
   createManufactureProduct,
+  updateManufactureProduct,
   getManufactureInventory,
   addManufactureStock,
   removeManufactureStock,
@@ -32,6 +34,7 @@ import {
 import type {
   Product,
   CreateProductDTO,
+  UpdateProductDTO,
 } from "@/types/product";
 
 import type {
@@ -62,9 +65,12 @@ export default function InventoryPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const [showAddProduct, setShowAddProduct] =
     useState(false);
+  const [editingProduct, setEditingProduct] =
+    useState<Product | null>(null);
 
   const [form, setForm] =
     useState<CreateProductDTO>(initialForm);
@@ -76,6 +82,7 @@ export default function InventoryPage() {
   } | null>(null);
 
   const [stockQuantity, setStockQuantity] = useState("");
+  const [bundleQuantity, setBundleQuantity] = useState("");
   const [stockNote, setStockNote] = useState("");
   const [stockSubmitting, setStockSubmitting] = useState(false);
   const [bundleSubmitting, setBundleSubmitting] = useState<number | null>(null);
@@ -126,6 +133,14 @@ export default function InventoryPage() {
     );
 
     return item?.quantity ?? 0;
+  }
+
+  function getProductBundleCount(productId: number): number {
+    const item = inventory.find(
+      (entry) => entry.product_id === productId,
+    );
+
+    return item?.bundle_count ?? 0;
   }
 
   const unitOptions = useMemo(
@@ -195,17 +210,36 @@ export default function InventoryPage() {
       setSubmitting(true);
       setError(null);
 
-      await createManufactureProduct({
-        product_code: form.product_code.trim(),
-        name: form.name.trim(),
-        hsn_sac: form.hsn_sac?.trim() || null,
-        unit: form.unit.trim(),
-      });
+      if (editingProduct) {
+        const data: UpdateProductDTO = {
+          name: form.name.trim(),
+          hsn_sac: form.hsn_sac?.trim() || null,
+          unit: form.unit.trim(),
+        };
+        const updated = await updateManufactureProduct(
+          editingProduct.id,
+          data,
+        );
+        setProducts((current) =>
+          current.map((product) =>
+            product.id === updated.id ? updated : product,
+          ),
+        );
+        setSuccess("Product updated successfully.");
+      } else {
+        await createManufactureProduct({
+          product_code: form.product_code.trim(),
+          name: form.name.trim(),
+          hsn_sac: form.hsn_sac?.trim() || null,
+          unit: form.unit.trim(),
+        });
+        await loadInventory(search);
+        setSuccess("Product created successfully.");
+      }
 
       setForm(initialForm);
       setShowAddProduct(false);
-
-      await loadInventory(search);
+      setEditingProduct(null);
     } catch (err) {
       console.error(err);
 
@@ -217,6 +251,19 @@ export default function InventoryPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function openEditProduct(product: Product) {
+    setError(null);
+    setSuccess(null);
+    setEditingProduct(product);
+    setForm({
+      product_code: product.product_code,
+      name: product.name,
+      hsn_sac: product.hsn_sac ?? "",
+      unit: product.unit,
+    });
+    setShowAddProduct(true);
   }
 
   function handleSearchSubmit(
@@ -232,6 +279,7 @@ export default function InventoryPage() {
   ) {
     setError(null);
     setStockQuantity("");
+    setBundleQuantity("");
     setStockNote("");
 
     setStockModal({
@@ -245,6 +293,7 @@ export default function InventoryPage() {
 
     setStockModal(null);
     setStockQuantity("");
+    setBundleQuantity("");
     setStockNote("");
   }
 
@@ -255,12 +304,50 @@ export default function InventoryPage() {
 
     if (!stockModal) return;
 
+    const adjustingBundles = bundleQuantity !== "";
+    if (
+      stockQuantity !== "" &&
+      adjustingBundles
+    ) {
+      setError(
+        stockModal.type === "add"
+          ? "Only stock or bundles can be added at a time."
+          : "Only stock or bundles can be removed at a time.",
+      );
+      return;
+    }
+
+    if (stockQuantity === "" && !adjustingBundles) {
+      setError(
+        stockModal.type === "add"
+          ? "Enter a stock quantity or bundle quantity to add."
+          : "Enter a stock quantity or bundle quantity to remove.",
+      );
+      return;
+    }
+
+    if (adjustingBundles) {
+      const count = Number(bundleQuantity);
+      if (!Number.isInteger(count) || count <= 0) {
+        setError("Bundle quantity must be a positive whole number.");
+        return;
+      }
+      const availableBundles = getProductBundleCount(stockModal.product.id);
+      if (stockModal.type === "remove" && count > availableBundles) {
+        setError(`Cannot remove more than ${availableBundles} bundles.`);
+        return;
+      }
+    }
+
     const quantity = Number(stockQuantity);
 
     const isKg =
       stockModal.product.unit.trim().toLowerCase() === "kg";
 
-    if (quantity <= 0 || (!isKg && !Number.isInteger(quantity))) {
+    if (
+      !adjustingBundles &&
+      (quantity <= 0 || (!isKg && !Number.isInteger(quantity)))
+    ) {
       setError(
         isKg
           ? "Quantity must be greater than zero."
@@ -273,20 +360,43 @@ export default function InventoryPage() {
       setStockSubmitting(true);
       setError(null);
 
-      const data = {
-        quantity,
-        note: stockNote.trim() || null,
-      };
-
-      if (stockModal.type === "add") {
+      if (adjustingBundles) {
+        const data = {
+          count: Number(bundleQuantity),
+          note: stockNote.trim() || null,
+        };
+        const updated =
+          stockModal.type === "add"
+            ? await addManufactureBundleCount(
+                stockModal.product.id,
+                data,
+              )
+            : await removeManufactureBundleCount(
+                stockModal.product.id,
+                data,
+              );
+        setInventory((current) =>
+          current.some((entry) => entry.product_id === stockModal.product.id)
+            ? current.map((entry) =>
+                entry.product_id === stockModal.product.id ? updated : entry,
+              )
+            : [...current, updated],
+        );
+      } else if (stockModal.type === "add") {
         await addManufactureStock(
           stockModal.product.id,
-          data,
+          {
+            quantity,
+            note: stockNote.trim() || null,
+          },
         );
       } else {
         await removeManufactureStock(
           stockModal.product.id,
-          data,
+          {
+            quantity,
+            note: stockNote.trim() || null,
+          },
         );
       }
 
@@ -385,6 +495,8 @@ export default function InventoryPage() {
             type="button"
             onClick={() => {
               setError(null);
+              setSuccess(null);
+              setEditingProduct(null);
               setForm(initialForm);
               setShowAddProduct(true);
             }}
@@ -409,6 +521,11 @@ export default function InventoryPage() {
             >
               <X size={18} />
             </button>
+          </div>
+        )}
+        {success && (
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
+            {success}
           </div>
         )}
 
@@ -670,6 +787,15 @@ export default function InventoryPage() {
                           <div className="flex justify-end gap-2">
                             <button
                               type="button"
+                              onClick={() => openEditProduct(product)}
+                              title="Edit product"
+                              className="flex h-9 items-center gap-1.5 rounded-lg bg-indigo-50 px-3 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-100"
+                            >
+                              <Pencil size={15} />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
                               onClick={() =>
                                 openStockModal(
                                   "add",
@@ -731,15 +857,21 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-8 py-6">
               <div>
                 <h2 className="text-xl font-semibold text-[#0f172a]">
-                  Add Product
+                  {editingProduct ? "Edit Product" : "Add Product"}
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Enter details to register a new product in the master.
+                  {editingProduct
+                    ? "Update product master details."
+                    : "Enter details to register a new product in the master."}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setShowAddProduct(false)}
+                onClick={() => {
+                  setShowAddProduct(false);
+                  setEditingProduct(null);
+                }}
+                disabled={submitting}
                 className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
               >
                 <X size={20} />
@@ -751,6 +883,11 @@ export default function InventoryPage() {
               onSubmit={handleCreateProduct}
               className="space-y-6 p-8"
             >
+              {error && (
+                <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 {/* Product name */}
                 <div className="sm:col-span-2">
@@ -772,7 +909,7 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Product code */}
-                <div className="sm:col-span-2">
+                {!editingProduct && <div className="sm:col-span-2">
                   <label className="mb-2 block font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
                     Product Code / SKU *
                   </label>
@@ -788,7 +925,7 @@ export default function InventoryPage() {
                     placeholder="E.g. HANDLE-001"
                     className="h-[52px] w-full rounded-xl border border-slate-200 bg-white px-4 font-mono text-sm uppercase text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
                   />
-                </div>
+                </div>}
 
                 {/* HSN */}
                 <div>
@@ -844,7 +981,11 @@ export default function InventoryPage() {
               <div className="mt-8 flex flex-col-reverse justify-end gap-3 border-t border-slate-100 pt-6 sm:flex-row">
                 <button
                   type="button"
-                  onClick={() => setShowAddProduct(false)}
+                  onClick={() => {
+                    setShowAddProduct(false);
+                    setEditingProduct(null);
+                  }}
+                  disabled={submitting}
                   className="flex h-[48px] items-center justify-center rounded-xl bg-slate-50 px-6 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
                 >
                   Cancel
@@ -861,15 +1002,16 @@ export default function InventoryPage() {
                         size={18}
                         className="animate-spin"
                       />
-                      Creating...
+                      {editingProduct ? "Saving..." : "Creating..."}
                     </>
                   ) : (
                     <>
-                      <Plus
-                        size={18}
-                        strokeWidth={2.5}
-                      />
-                      Create Product
+                      {editingProduct ? (
+                        <Pencil size={18} />
+                      ) : (
+                        <Plus size={18} strokeWidth={2.5} />
+                      )}
+                      {editingProduct ? "Save Changes" : "Create Product"}
                     </>
                   )}
                 </button>
@@ -926,6 +1068,16 @@ export default function InventoryPage() {
               onSubmit={handleStockAdjustment}
               className="space-y-6 p-8"
             >
+              {error && (
+                <div
+                  role="alert"
+                  className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50/80 px-5 py-4 text-sm text-red-700"
+                >
+                  <AlertCircle size={18} />
+                  <span className="font-medium">{error}</span>
+                </div>
+              )}
+
               {/* Current stock */}
               <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
                 <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
@@ -949,7 +1101,7 @@ export default function InventoryPage() {
                   Quantity *
                 </label>
                 <input
-                  required
+                  required={bundleQuantity === ""}
                   type="number"
                   min="1"
                   step={
@@ -994,6 +1146,42 @@ export default function InventoryPage() {
                   }
                   className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
                 />
+              </div>
+
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
+                  Bundle
+                </div>
+                <div className="mt-4">
+                  <div className="mb-2 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
+                    Current Bundle
+                  </div>
+                  <div className="text-3xl font-semibold text-[#0f172a]">
+                    {getProductBundleCount(stockModal.product.id)}
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="mb-2 block font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Bundle Quantity
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    max={
+                      stockModal.type === "remove"
+                        ? getProductBundleCount(stockModal.product.id)
+                        : undefined
+                    }
+                    inputMode="numeric"
+                    value={bundleQuantity}
+                    onChange={(event) =>
+                      setBundleQuantity(event.target.value)
+                    }
+                    placeholder="Enter bundle quantity"
+                    className="h-[52px] w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                  />
+                </div>
               </div>
 
               {/* Actions */}
@@ -1133,7 +1321,27 @@ export default function InventoryPage() {
                             transaction.transaction_type ===
                               "PURCHASE" ||
                             transaction.transaction_type ===
-                              "SALE_RETURN";
+                              "SALE_RETURN" ||
+                            transaction.transaction_type ===
+                              "BUNDLE_ADJUSTMENT_IN";
+                          const isStockAdjustment =
+                            transaction.transaction_type === "ADJUSTMENT_IN" ||
+                            transaction.transaction_type === "ADJUSTMENT_OUT";
+                          const transactionLabel =
+                            transaction.transaction_type === "ADJUSTMENT_IN"
+                              ? "Stock Added"
+                              : transaction.transaction_type === "ADJUSTMENT_OUT"
+                                ? "Stock Removed"
+                                : transaction.transaction_type ===
+                                    "BUNDLE_ADJUSTMENT_IN"
+                                  ? "Bundle Added"
+                                  : transaction.transaction_type ===
+                                      "BUNDLE_ADJUSTMENT_OUT"
+                                    ? "Bundle Removed"
+                                    : transaction.transaction_type.replace(
+                                        /_/g,
+                                        " ",
+                                      );
 
                           return (
                             <tr
@@ -1165,10 +1373,7 @@ export default function InventoryPage() {
                                   ) : (
                                     <ArrowDown size={13} />
                                   )}
-                                  {transaction.transaction_type.replace(
-                                    /_/g,
-                                    " ",
-                                  )}
+                                  {transactionLabel}
                                 </span>
                               </td>
 
@@ -1183,6 +1388,8 @@ export default function InventoryPage() {
                                   ? "+"
                                   : "-"}
                                 {transaction.quantity}
+                                {isStockAdjustment &&
+                                  ` ${historyProduct?.unit ?? ""}`}
                               </td>
 
                               <td className="px-6 py-4 text-sm text-slate-500">

@@ -86,7 +86,6 @@
     const [bundleQuantity, setBundleQuantity] = useState("");
     const [stockNote, setStockNote] = useState("");
     const [stockSubmitting, setStockSubmitting] = useState(false);
-    const [bundleSubmitting, setBundleSubmitting] = useState<number | null>(null);
 
     // History modal
     const [historyProduct, setHistoryProduct] =
@@ -392,35 +391,6 @@
         );
       } finally {
         setStockSubmitting(false);
-      }
-    }
-
-    async function handleBundleAdjustment(
-      productId: number,
-      type: "add" | "remove",
-    ) {
-      try {
-        setBundleSubmitting(productId);
-        setError(null);
-        const data = { count: 1 };
-        const updated =
-          type === "add"
-            ? await addBundleCount(productId, data)
-            : await removeBundleCount(productId, data);
-        setInventory((current) =>
-          current.some((entry) => entry.product_id === productId)
-            ? current.map((entry) =>
-                entry.product_id === productId ? updated : entry,
-              )
-            : [...current, updated],
-        );
-      } catch (err) {
-        console.error(err);
-        setError(
-          err instanceof Error ? err.message : "Failed to update bundles",
-        );
-      } finally {
-        setBundleSubmitting(null);
       }
     }
 
@@ -738,27 +708,9 @@
                           {/* Bundles */}
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleBundleAdjustment(product.id, "remove")}
-                                disabled={bundleSubmitting === product.id || (inventory.find((entry) => entry.product_id === product.id)?.bundle_count ?? 0) === 0}
-                                title="Remove bundle"
-                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <MinusCircle size={15} />
-                              </button>
                               <span className="min-w-8 text-center font-mono text-sm font-bold text-slate-700">
                                 {inventory.find((entry) => entry.product_id === product.id)?.bundle_count ?? 0}
                               </span>
-                              <button
-                                type="button"
-                                onClick={() => handleBundleAdjustment(product.id, "add")}
-                                disabled={bundleSubmitting === product.id}
-                                title="Add bundle"
-                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-                              >
-                                <PlusCircle size={15} />
-                              </button>
                             </div>
                           </td>
 

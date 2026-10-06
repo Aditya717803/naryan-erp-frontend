@@ -303,20 +303,10 @@ export default function InventoryPage() {
 
     if (!stockModal) return;
 
+    const adjustingStock = stockQuantity !== "";
     const adjustingBundles = bundleQuantity !== "";
-    if (
-      stockQuantity !== "" &&
-      adjustingBundles
-    ) {
-      setError(
-        stockModal.type === "add"
-          ? "Only stock or bundles can be added at a time."
-          : "Only stock or bundles can be removed at a time.",
-      );
-      return;
-    }
 
-    if (stockQuantity === "" && !adjustingBundles) {
+    if (!adjustingStock && !adjustingBundles) {
       setError(
         stockModal.type === "add"
           ? "Enter a stock quantity or bundle quantity to add."
@@ -344,8 +334,10 @@ export default function InventoryPage() {
       stockModal.product.unit.trim().toLowerCase() === "kg";
 
     if (
-      !adjustingBundles &&
-      (quantity <= 0 || (!isKg && !Number.isInteger(quantity)))
+      adjustingStock &&
+      (!Number.isFinite(quantity) ||
+        quantity <= 0 ||
+        (!isKg && !Number.isInteger(quantity)))
     ) {
       setError(
         isKg
@@ -359,7 +351,20 @@ export default function InventoryPage() {
       setStockSubmitting(true);
       setError(null);
 
-      if (adjustingBundles) {
+      if (adjustingStock) {
+        const data = {
+          quantity,
+          ...(adjustingBundles
+            ? { bundle_count: Number(bundleQuantity) }
+            : {}),
+          note: stockNote.trim() || null,
+        };
+        if (stockModal.type === "add") {
+          await addManufactureStock(stockModal.product.id, data);
+        } else {
+          await removeManufactureStock(stockModal.product.id, data);
+        }
+      } else {
         const data = {
           count: Number(bundleQuantity),
           note: stockNote.trim() || null,
@@ -379,23 +384,7 @@ export default function InventoryPage() {
             ? current.map((entry) =>
                 entry.product_id === stockModal.product.id ? updated : entry,
               )
-            : [...current, updated],
-        );
-      } else if (stockModal.type === "add") {
-        await addManufactureStock(
-          stockModal.product.id,
-          {
-            quantity,
-            note: stockNote.trim() || null,
-          },
-        );
-      } else {
-        await removeManufactureStock(
-          stockModal.product.id,
-          {
-            quantity,
-            note: stockNote.trim() || null,
-          },
+              : [...current, updated],
         );
       }
 
@@ -1050,7 +1039,7 @@ export default function InventoryPage() {
               {/* Quantity */}
               <div>
                 <label className="mb-2 block font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500">
-                  Quantity *
+                  Stock Quantity{bundleQuantity === "" ? " *" : ""}
                 </label>
                 <input
                   required={bundleQuantity === ""}

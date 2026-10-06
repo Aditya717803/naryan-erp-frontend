@@ -9,6 +9,7 @@ export interface Inventory {
 
 export interface InventoryAdjustment {
   quantity: number;
+  bundle_count?: number;
   note?: string | null;
 }
 

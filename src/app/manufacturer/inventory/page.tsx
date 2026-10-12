@@ -30,6 +30,11 @@ import {
   removeManufactureBundleCount,
   getManufactureInventoryTransactions,
 } from "@/lib/api";
+import {
+  hasAtMostThreeDecimalPlaces,
+  isQuantityValidForUnit,
+  supportsFractionalQuantity,
+} from "@/lib/quantity";
 
 import type {
   Product,
@@ -330,20 +335,28 @@ export default function InventoryPage() {
 
     const quantity = Number(stockQuantity);
 
-    const isKg =
-      stockModal.product.unit.trim().toLowerCase() === "kg";
+    const allowsFractionalQuantity = supportsFractionalQuantity(
+      stockModal.product.unit,
+    );
 
     if (
       adjustingStock &&
       (!Number.isFinite(quantity) ||
         quantity <= 0 ||
-        (!isKg && !Number.isInteger(quantity)))
+        !isQuantityValidForUnit(stockQuantity, stockModal.product.unit))
     ) {
-      setError(
-        isKg
-          ? "Quantity must be greater than zero."
-          : `Quantity for ${stockModal.product.unit} must be a whole number.`,
-      );
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        setError("Quantity must be greater than zero.");
+      } else if (
+        allowsFractionalQuantity &&
+        !hasAtMostThreeDecimalPlaces(stockQuantity)
+      ) {
+        setError("Quantity must have no more than 3 decimal places.");
+      } else {
+        setError(
+          `Quantity for ${stockModal.product.unit} must be a whole number.`,
+        );
+      }
       return;
     }
 
@@ -905,6 +918,7 @@ export default function InventoryPage() {
                       <option value="Piece">Piece</option>
                       <option value="Kg">Kg</option>
                       <option value="Meter">Meter</option>
+                      <option value="Sq. Feet">Sq. Feet</option>
                       <option value="Box">Box</option>
                       <option value="Set">Set</option>
                     </select>
@@ -1044,14 +1058,18 @@ export default function InventoryPage() {
                 <input
                   required={bundleQuantity === ""}
                   type="number"
-                  min="1"
+                  min={
+                    supportsFractionalQuantity(stockModal.product.unit)
+                      ? "0.001"
+                      : "1"
+                  }
                   step={
-                    stockModal.product.unit.trim().toLowerCase() === "kg"
-                      ? "0.1"
+                    supportsFractionalQuantity(stockModal.product.unit)
+                      ? "0.001"
                       : "1"
                   }
                   inputMode={
-                    stockModal.product.unit.trim().toLowerCase() === "kg"
+                    supportsFractionalQuantity(stockModal.product.unit)
                       ? "decimal"
                       : "numeric"
                   }

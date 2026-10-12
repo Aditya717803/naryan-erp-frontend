@@ -30,6 +30,11 @@
     removeBundleCount,
     getInventoryTransactions,
   } from "@/lib/api";
+  import {
+    hasAtMostThreeDecimalPlaces,
+    isQuantityValidForUnit,
+    supportsFractionalQuantity,
+  } from "@/lib/quantity";
 
   import type {
     Product,
@@ -49,7 +54,7 @@
     unit: "Piece",
   };
 
-  type UnitFilter = "all" | "kg" | "piece" | "meter" | "box" | "set";
+  type UnitFilter = "all" | "kg" | "sq. feet" | "piece" | "meter" | "box" | "set";
   type StockFilter = "all" | "in-stock" | "low-stock" | "out-of-stock";
   type SortFilter = "name-asc" | "name-desc" | "stock-asc" | "stock-desc";
 
@@ -316,20 +321,28 @@
 
       const quantity = Number(stockQuantity);
 
-      const isKg =
-        stockModal.product.unit.trim().toLowerCase() === "kg";
+      const allowsFractionalQuantity = supportsFractionalQuantity(
+        stockModal.product.unit,
+      );
 
       if (
         adjustingStock &&
         (!Number.isFinite(quantity) ||
           quantity <= 0 ||
-          (!isKg && !Number.isInteger(quantity)))
+          !isQuantityValidForUnit(stockQuantity, stockModal.product.unit))
       ) {
-        setError(
-          isKg
-            ? "Quantity must be greater than zero."
-            : `Quantity for ${stockModal.product.unit} must be a whole number.`,
-        );
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          setError("Quantity must be greater than zero.");
+        } else if (
+          allowsFractionalQuantity &&
+          !hasAtMostThreeDecimalPlaces(stockQuantity)
+        ) {
+          setError("Quantity must have no more than 3 decimal places.");
+        } else {
+          setError(
+            `Quantity for ${stockModal.product.unit} must be a whole number.`,
+          );
+        }
         return;
       }
 
@@ -534,6 +547,7 @@
                   >
                     <option value="all">All</option>
                     <option value="kg">Kg</option>
+                    <option value="sq. feet">Sq. Feet</option>
                     <option value="piece">Piece</option>
                     <option value="meter">Meter</option>
                     <option value="box">Box</option>
@@ -885,6 +899,7 @@
                         <option value="Piece">Piece</option>
                         <option value="Kg">Kg</option>
                         <option value="Meter">Meter</option>
+                        <option value="Sq. Feet">Sq. Feet</option>
                         <option value="Box">Box</option>
                         <option value="Set">Set</option>
                       </select>
@@ -1024,14 +1039,18 @@
                   <input
                     required={bundleQuantity === ""}
                     type="number"
-                    min="1"
+                    min={
+                      supportsFractionalQuantity(stockModal.product.unit)
+                        ? "0.001"
+                        : "1"
+                    }
                     step={
-                      stockModal.product.unit.trim().toLowerCase() === "kg"
-                        ? "0.01"
+                      supportsFractionalQuantity(stockModal.product.unit)
+                        ? "0.001"
                         : "1"
                     }
                     inputMode={
-                      stockModal.product.unit.trim().toLowerCase() === "kg"
+                      supportsFractionalQuantity(stockModal.product.unit)
                         ? "decimal"
                         : "numeric"
                     }

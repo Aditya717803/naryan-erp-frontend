@@ -26,6 +26,11 @@ import {
   getProducts,
   getNextInvoiceNumber,
 } from "@/lib/api";
+import {
+  hasAtMostThreeDecimalPlaces,
+  isQuantityValidForUnit,
+  supportsFractionalQuantity,
+} from "@/lib/quantity";
 
 import type { Customer } from "@/types/customer";
 import type { Product } from "@/types/product";
@@ -263,8 +268,29 @@ export default function CreateInvoicePage() {
         return;
       }
 
-      if (Number(item.quantity) <= 0) {
+      const product = products.find(
+        (productItem) => productItem.id === item.product_id,
+      );
+      if (!product) {
+        setError("Please select a valid product for every item.");
+        return;
+      }
+
+      if (
+        !Number.isFinite(Number(item.quantity)) ||
+        Number(item.quantity) <= 0
+      ) {
         setError("Quantity must be greater than zero.");
+        return;
+      }
+
+      if (!isQuantityValidForUnit(item.quantity, product.unit)) {
+        setError(
+          supportsFractionalQuantity(product.unit) &&
+            !hasAtMostThreeDecimalPlaces(item.quantity)
+            ? "Quantity must have no more than 3 decimal places."
+            : `Quantity for ${product.unit} must be a whole number.`,
+        );
         return;
       }
 
@@ -624,8 +650,18 @@ export default function CreateInvoicePage() {
                             <input
                               type="number"
                               min="0"
-                              step="0.001"
-                              inputMode="decimal"
+                              step={
+                                product &&
+                                supportsFractionalQuantity(product.unit)
+                                  ? "0.001"
+                                  : "1"
+                              }
+                              inputMode={
+                                product &&
+                                supportsFractionalQuantity(product.unit)
+                                  ? "decimal"
+                                  : "numeric"
+                              }
                               value={item.quantity}
                               onFocus={(event) => event.target.select()}
                               onChange={(event) =>

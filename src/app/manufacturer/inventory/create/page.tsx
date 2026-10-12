@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import AddProduct from "@/app/component/addproduct";
+import AddProduct from "@/app/component/manufacture-addproduct";
 
 export default function CreateInventoryPage() {
   const router = useRouter();

@@ -26,6 +26,11 @@ getManufactureCustomers,
 getManufactureProducts,
 getNextManufactureInvoiceNumber,
 } from "@/lib/api";
+import {
+  hasAtMostThreeDecimalPlaces,
+  isQuantityValidForUnit,
+  supportsFractionalQuantity,
+} from "@/lib/quantity";
 
 import type { Customer } from "@/types/customer";
 import type { Product } from "@/types/product";
@@ -268,18 +273,23 @@ export default function CreateInvoicePage() {
       );
 
       if (
-        product &&
-        product.unit.trim().toLowerCase() !== "kg" &&
-        !Number.isInteger(Number(item.quantity))
+        !Number.isFinite(Number(item.quantity)) ||
+        Number(item.quantity) <= 0
       ) {
-        setError(
-          `Quantity for ${product.unit} must be a whole number.`,
-        );
+        setError("Quantity must be greater than zero.");
         return;
       }
 
-      if (Number(item.quantity) <= 0) {
-        setError("Quantity must be greater than zero.");
+      if (
+        product &&
+        !isQuantityValidForUnit(item.quantity, product.unit)
+      ) {
+        setError(
+          supportsFractionalQuantity(product.unit) &&
+            !hasAtMostThreeDecimalPlaces(item.quantity)
+            ? "Quantity must have no more than 3 decimal places."
+            : `Quantity for ${product.unit} must be a whole number.`,
+        );
         return;
       }
 
@@ -640,12 +650,14 @@ export default function CreateInvoicePage() {
                               type="number"
                               min="0"
                               step={
-                                product?.unit.trim().toLowerCase() === "kg"
+                                product &&
+                                supportsFractionalQuantity(product.unit)
                                   ? "0.001"
                                   : "1"
                               }
                               inputMode={
-                                product?.unit.trim().toLowerCase() === "kg"
+                                product &&
+                                supportsFractionalQuantity(product.unit)
                                   ? "decimal"
                                   : "numeric"
                               }

@@ -235,6 +235,10 @@ export default function AddProduct({
                     Meter
                   </option>
 
+                  <option value="Sq. Feet">
+                    Sq. Feet
+                  </option>
+
                   <option value="Box">
                     Box
                   </option>
